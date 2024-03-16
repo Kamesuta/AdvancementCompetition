@@ -1,0 +1,17 @@
+name: AdvancementCompetition
+version: '${project.version}'
+main: com.kamesuta.advancementcompetition.AdvancementCompetition
+api-version: '1.20'
+depend:
+  - ProtocolLib
+
+permissions:
+  advancementcompetition.command.admin:
+    description: Allows the player to use the admin command
+    default: op
+
+commands:
+  advancementcompetition:
+    description: Main command for AdvancementCompetition
+    usage: /<command> [admin]
+    permission: advancementcompetition.command.admin
