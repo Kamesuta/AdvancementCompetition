@@ -1,0 +1,17 @@
+package com.kamesuta.advancementcompetition;
+
+import org.bukkit.entity.Player;
+
+/**
+ * プレイヤーデータ
+ */
+public class PlayerData {
+    /**
+     * 次回進捗メニューを開いた時に進捗を更新するか
+     */
+    public boolean needUpdate = true;
+    /**
+     * 次回進捗メニューを開いたときに進捗を見る対象のプレイヤー
+     */
+    public Player targetQueue;
+}

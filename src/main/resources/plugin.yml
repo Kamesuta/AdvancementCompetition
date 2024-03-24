@@ -11,7 +11,7 @@ permissions:
     default: op
 
 commands:
-  advancementcompetition:
+  adv:
     description: Main command for AdvancementCompetition
-    usage: /<command> [admin]
+    usage: /adv [admin]
     permission: advancementcompetition.command.admin
