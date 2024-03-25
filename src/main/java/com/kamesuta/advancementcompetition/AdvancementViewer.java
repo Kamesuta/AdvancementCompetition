@@ -80,6 +80,11 @@ public class AdvancementViewer {
                 if (packet.getAction() == ServerboundSeenAdvancementsPacket.Action.OPENED_TAB) {
                     onAdvancementTabOpen(event.getPlayer());
                 }
+
+                // 進捗タブが閉じられた
+                if (packet.getAction() == ServerboundSeenAdvancementsPacket.Action.CLOSED_SCREEN) {
+                    onAdvancementTabClose(event.getPlayer());
+                }
             }
         });
     }
@@ -99,5 +104,19 @@ public class AdvancementViewer {
             // 進捗を更新する
             playerData.needUpdate = false;
         }
+    }
+
+    /**
+     * 進捗タブが開かれた
+     *
+     * @param viewer 見るプレイヤー
+     */
+    private void onAdvancementTabClose(Player viewer) {
+        // プレイヤーデータを取得
+        PlayerData playerData = app.playerDataManager.getPlayerData(viewer);
+        // ターゲットをリセット
+        playerData.targetQueue = null;
+        // 元に戻す
+        seePlayerAdvancements((CraftPlayer) viewer, (CraftPlayer) viewer);
     }
 }

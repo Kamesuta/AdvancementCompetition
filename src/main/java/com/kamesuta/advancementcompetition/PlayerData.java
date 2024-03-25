@@ -1,6 +1,7 @@
 package com.kamesuta.advancementcompetition;
 
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * プレイヤーデータ
@@ -13,5 +14,5 @@ public class PlayerData {
     /**
      * 次回進捗メニューを開いたときに進捗を見る対象のプレイヤー
      */
-    public Player targetQueue;
+    public @Nullable Player targetQueue;
 }
