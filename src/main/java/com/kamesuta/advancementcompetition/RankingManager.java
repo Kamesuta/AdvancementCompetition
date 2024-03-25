@@ -91,7 +91,7 @@ public class RankingManager implements AutoCloseable, Listener {
     @EventHandler
     public void onAdvancementDone(PlayerAdvancementDoneEvent event) {
         // レシピなどは無視
-        if (event.getAdvancement().getKey().asString().startsWith("recipes/")) return;
+        if (event.getAdvancement().getKey().asString().startsWith("minecraft:recipes/")) return;
 
         // プレイヤーの進捗を更新する
         String key = event.getAdvancement().getKey().asString();
