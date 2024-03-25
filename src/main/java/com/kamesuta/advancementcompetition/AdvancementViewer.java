@@ -20,7 +20,7 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 
-import static com.kamesuta.advancementcompetition.AdvancementCompetition.plugin;
+import static com.kamesuta.advancementcompetition.AdvancementCompetition.app;
 
 /**
  * 他人の進捗を見る
@@ -70,7 +70,7 @@ public class AdvancementViewer {
      * タブ閉じるパケットアダプターを登録する
      */
     public void register() {
-        plugin.protocolManager.addPacketListener(new PacketAdapter(plugin, PacketType.Play.Client.ADVANCEMENTS) {
+        app.protocolManager.addPacketListener(new PacketAdapter(app, PacketType.Play.Client.ADVANCEMENTS) {
             @Override
             public void onPacketReceiving(PacketEvent event) {
                 PacketContainer packetContainer = event.getPacket();
@@ -91,7 +91,7 @@ public class AdvancementViewer {
      */
     private void onAdvancementTabOpen(Player viewer) {
         // プレイヤーデータを取得
-        PlayerData playerData = plugin.playerDataManager.getPlayerData(viewer);
+        PlayerData playerData = app.playerDataManager.getPlayerData(viewer);
         if (playerData.needUpdate) {
             // タイトルを消す
             viewer.sendTitle("", "", 0, 0, 0);

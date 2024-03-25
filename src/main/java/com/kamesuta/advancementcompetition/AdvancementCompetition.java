@@ -10,8 +10,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * プラグイン
+ */
 public final class AdvancementCompetition extends JavaPlugin implements Listener {
     /**
      * ロガー
@@ -20,7 +24,7 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
     /**
      * プラグイン
      */
-    public static AdvancementCompetition plugin;
+    public static AdvancementCompetition app;
 
     /**
      * ProtocolLibのプロトコルマネージャ
@@ -35,17 +39,23 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
      * 他人の進捗を見る
      */
     public AdvancementViewer viewer;
-
     /**
      * ランキング表示
      */
     public AdvancementRanking ranking;
+    /**
+     * ランキングマネージャー
+     */
+    public RankingManager rankingManager;
 
     @Override
     public void onEnable() {
         // Plugin startup logic
         logger = getLogger();
-        plugin = this;
+        app = this;
+
+        // コンフィグ初期化
+        saveDefaultConfig();
 
         // イベントリスナー
         getServer().getPluginManager().registerEvents(this, this);
@@ -54,6 +64,16 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
 
         // プレイヤーデータ
         playerDataManager = new PlayerDataManager();
+
+        // ランキングマネージャー初期化
+        try {
+            rankingManager = new RankingManager();
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "ランキングマネージャーの初期化に失敗しました", e);
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
+        getServer().getPluginManager().registerEvents(rankingManager, this);
 
         // Viewer初期化
         viewer = new AdvancementViewer();
@@ -66,6 +86,13 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        if (playerDataManager != null) {
+            try {
+                rankingManager.close();
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "ランキングマネージャーのクローズに失敗しました", e);
+            }
+        }
     }
 
     // コマンドハンドラ
