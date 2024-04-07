@@ -10,8 +10,17 @@ permissions:
     description: Allows the player to use the admin command
     default: op
 
+  advancementcompetition.command.adv:
+    description: Allows the player to see player's advancements
+    default: true
+
 commands:
   adv:
     description: Main command for AdvancementCompetition
     usage: /adv [admin]
+    permission: advancementcompetition.command.adv
+
+  adv_place:
+    description: Place an advancement
+    usage: /adv_place <advancement>
     permission: advancementcompetition.command.admin

@@ -1,5 +1,7 @@
 package com.kamesuta.advancementcompetition;
 
+import org.bukkit.block.BlockFace;
+
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -33,5 +35,26 @@ public class AdvancementUtil {
      */
     private static int getByteLength(String string) {
         return string.getBytes(StandardCharsets.UTF_8).length;
+    }
+
+    /**
+     * ブロックの右側を取得
+     *
+     * @param face ブロックの向き
+     * @return 右側の向き
+     */
+    public static BlockFace getRight(BlockFace face) {
+        switch (face) {
+            case NORTH:
+                return BlockFace.EAST;
+            case EAST:
+                return BlockFace.SOUTH;
+            case SOUTH:
+                return BlockFace.WEST;
+            case WEST:
+                return BlockFace.NORTH;
+            default:
+                return face;
+        }
     }
 }

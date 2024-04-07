@@ -3,13 +3,16 @@ package com.kamesuta.advancementcompetition;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import org.bukkit.Bukkit;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.RayTraceResult;
 
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,6 +51,11 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
      */
     public RankingManager rankingManager;
 
+    /**
+     * ディスプレイ
+     */
+    public AdvancementDisplay display;
+
     @Override
     public void onEnable() {
         // Plugin startup logic
@@ -81,6 +89,16 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
         // Ranking初期化
         ranking = new AdvancementRanking();
         ranking.register();
+
+        // Display初期化
+        display = new AdvancementDisplay();
+        try {
+            display.load();
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "マップの初期化に失敗しました", e);
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
     }
 
     @Override
@@ -97,6 +115,7 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
 
     // コマンドハンドラ
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        // 他人の進捗を見る
         if (command.getName().equals("adv")) {
             // 自身を取得
             if (!(sender instanceof Player)) {
@@ -126,6 +145,27 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
             playerData.targetQueue = target;
             playerData.needUpdate = true;
             viewer.seePlayerAdvancements(player, target);
+        }
+
+        // 進捗を設置
+        if (command.getName().equals("adv_place")) {
+            // 自身を取得
+            if (!(sender instanceof Player)) {
+                sender.sendMessage("このコマンドはプレイヤーのみ実行可能です");
+                return true;
+            }
+            Player player = (Player) sender;
+
+            // 目線の先を取得
+            RayTraceResult result = player.rayTraceBlocks(6, FluidCollisionMode.NEVER);
+            if (result != null) {
+                // 設置
+                try {
+                    display.place(result.getHitBlock(), result.getHitBlockFace());
+                } catch (IllegalArgumentException e) {
+                    sender.sendMessage(e.getMessage());
+                }
+            }
         }
 
         return true;
