@@ -2,6 +2,7 @@ package com.kamesuta.advancementcompetition;
 
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
+import com.kamesuta.advancementcompetition.display.AdvancementDisplay;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.command.Command;

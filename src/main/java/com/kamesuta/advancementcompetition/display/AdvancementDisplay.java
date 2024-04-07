@@ -1,5 +1,6 @@
-package com.kamesuta.advancementcompetition;
+package com.kamesuta.advancementcompetition.display;
 
+import com.kamesuta.advancementcompetition.AdvancementUtil;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -23,7 +24,7 @@ public class AdvancementDisplay implements Listener {
     /**
      * マップビュー
      */
-    private final List<AdvancementDisplayRenderer> displays = new ArrayList<>();
+    private final List<PanelDisplay> displays = new ArrayList<>();
 
     /**
      * マップの数
@@ -33,12 +34,12 @@ public class AdvancementDisplay implements Listener {
     /**
      * マップ
      */
-    public List<AdvancementDisplayRenderer.MapDisplay> panel;
+    public List<MapDisplay> panel;
 
     /**
      * マップ (達成済み)
      */
-    public List<AdvancementDisplayRenderer.MapDisplay> panelDone;
+    public List<MapDisplay> panelDone;
 
     /**
      * マップを読み込む
@@ -51,7 +52,7 @@ public class AdvancementDisplay implements Listener {
         panelDone = loadMap("panel_done.png");
     }
 
-    private List<AdvancementDisplayRenderer.MapDisplay> loadMap(String name) throws IOException {
+    private List<MapDisplay> loadMap(String name) throws IOException {
         // マップ画像を読み込む
         InputStream mapResource = app.getResource(name);
         if (mapResource == null) {
@@ -66,14 +67,15 @@ public class AdvancementDisplay implements Listener {
                     return image.getSubimage(width * i, 0, width, image.getHeight());
                 })
                 // マップに変換
-                .map(AdvancementDisplayRenderer.MapDisplay::new)
+                .map(MapDisplay::new)
                 .collect(Collectors.toList());
     }
 
     /**
      * パネルを設置
+     *
      * @param block 基準ブロック
-     * @param face 基準ブロックの向き
+     * @param face  基準ブロックの向き
      */
     public void place(Block block, BlockFace face) {
         if (!face.isCartesian() || face == BlockFace.UP || face == BlockFace.DOWN) {
@@ -90,8 +92,8 @@ public class AdvancementDisplay implements Listener {
         }
 
         // マップを取得
-        AdvancementDisplayRenderer display = new AdvancementDisplayRenderer(block, face);
+        PanelDisplay display = new PanelDisplay(block, face);
         displays.add(display);
-        block.getLocation().getNearbyPlayers(16).forEach((player) -> display.show(player));
+        block.getLocation().getNearbyPlayers(16).forEach(display::show);
     }
 }
