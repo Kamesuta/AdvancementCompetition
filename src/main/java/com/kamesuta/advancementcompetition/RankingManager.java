@@ -80,7 +80,9 @@ public class RankingManager implements AutoCloseable, Listener {
 
     @Override
     public void close() throws SQLException {
-        conn.close();
+        if (conn != null) {
+            conn.close();
+        }
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.kamesuta.advancementcompetition;
 
+import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 
 import java.nio.charset.StandardCharsets;
@@ -56,5 +57,27 @@ public class AdvancementUtil {
             default:
                 return face;
         }
+    }
+
+    /**
+     * ブロックの向きを取得
+     *
+     * @param direction ブロックの向き
+     * @return 回転角度 (ラジアン)
+     */
+    public static float getRotate(BlockFace direction) {
+        int modX = direction.getModX();
+        int modZ = direction.getModZ();
+        return (float) Math.atan2(modZ, modX);
+    }
+
+    /**
+     * ブロックかどうか判定
+     *
+     * @param type ブロックの種類
+     * @return ブロックかどうか
+     */
+    public static boolean isBlock(Material type) {
+        return type.isSolid() && !type.toString().equals("AMETHYST_CLUSTER") && !type.toString().equals("POINTED_DRIPSTONE");
     }
 }
