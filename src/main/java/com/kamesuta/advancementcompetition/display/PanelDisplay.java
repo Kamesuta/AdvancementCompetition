@@ -2,6 +2,7 @@ package com.kamesuta.advancementcompetition.display;
 
 import com.kamesuta.advancementcompetition.AdvancementUtil;
 import com.mojang.math.Transformation;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
@@ -63,6 +64,11 @@ public class PanelDisplay {
             // アイテムを表示
             showFlatItem(player, new ItemStack(Items.ACACIA_FENCE_GATE));
 
+            // テキストを表示
+            showText(player, "Hello, world!", 0.38f, 0.22f, 0.5f, true);
+            showText(player, "説明", -0.33f, -0.03f, 0.35f, false);
+            showText(player, "クリア率:1/2人(1位) 03/25 14:41取得", -0.33f, 0.1f, 0.35f, false);
+
             for (int i = 0; i < AdvancementDisplay.mapLength; i++) {
                 // マップを取得
                 MapDisplay mapDisplay = app.display.panel.get(i);
@@ -78,7 +84,8 @@ public class PanelDisplay {
 
     /**
      * 平らなアイテムをパネルに表示します。
-     * @param player プレイヤー
+     *
+     * @param player    プレイヤー
      * @param itemStack アイテム
      */
     private void showFlatItem(Player player, ItemStack itemStack) {
@@ -110,5 +117,37 @@ public class PanelDisplay {
         ServerGamePacketListenerImpl connection = ((CraftPlayer) player).getHandle().connection;
         connection.send(new ClientboundAddEntityPacket(itemDisplay, itemDisplay.getDirection().get3DDataValue()));
         connection.send(new ClientboundSetEntityDataPacket(itemDisplay.getId(), itemDisplay.getEntityData().packDirty()));
+    }
+
+    /**
+     * 平らなアイテムをパネルに表示します。
+     *
+     * @param player プレイヤー
+     * @param text   テキスト
+     * @param x      X座標
+     * @param y      Y座標
+     * @param scale  スケール
+     * @param shadow 影
+     */
+    private void showText(Player player, String text, float x, float y, float scale, boolean shadow) {
+        // テキストディスプレイの幻覚
+        Display.TextDisplay textDisplay = new Display.TextDisplay(EntityType.TEXT_DISPLAY, ((CraftWorld) player.getWorld()).getHandle());
+        textDisplay.setText(Component.literal(text));
+        Location location = baseBlock.getLocation().clone().add(0.5, 0.5, 0.5).add(direction.getDirection().multiply(0.52));
+        textDisplay.setPos(location.getX(), location.getY(), location.getZ());
+        textDisplay.setBrightnessOverride(Brightness.FULL_BRIGHT);
+        textDisplay.getEntityData().set(Display.TextDisplay.DATA_BACKGROUND_COLOR_ID, 0);
+        textDisplay.setFlags((byte) (Display.TextDisplay.FLAG_ALIGN_LEFT | (shadow ? Display.TextDisplay.FLAG_SHADOW : 0)));
+
+        // テキストディスプレイの向き
+        Matrix4f transform = new Matrix4f()
+                .rotate((float) (Math.PI / 2) - AdvancementUtil.getRotate(direction), new Vector3f(0, 1, 0)) // ブロックの向きに合わせる
+                .translate(x, y, 0f) // マップ上の位置に合わせる
+                .scale(scale, scale, 1f); // スケール
+        textDisplay.setTransformation(new Transformation(transform));
+
+        ServerGamePacketListenerImpl connection = ((CraftPlayer) player).getHandle().connection;
+        connection.send(new ClientboundAddEntityPacket(textDisplay, textDisplay.getDirection().get3DDataValue()));
+        connection.send(new ClientboundSetEntityDataPacket(textDisplay.getId(), textDisplay.getEntityData().packDirty()));
     }
 }
