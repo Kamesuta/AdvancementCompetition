@@ -13,6 +13,7 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
@@ -72,6 +73,9 @@ public class PanelDisplay {
             showText(player, "クリア率:1/2人(1位) 03/25 14:41取得", 0.6f, -0.477f, 220, 0.35f, true);
             showText(player, "ランキング\n1.Kamesuta\n2.kumo_0621\n3.kei_55\n4.hina2113\n5.\n6.\n7.\n8.\n9.", 2.05f, -0.45f, 100, 0.3f, false);
 
+            // 進捗を表示
+            showProgressBar(player, 0.35f);
+
             for (int i = 0; i < AdvancementDisplay.mapLength; i++) {
                 // マップを取得
                 MapDisplay mapDisplay = app.display.panel.get(i);
@@ -92,9 +96,6 @@ public class PanelDisplay {
      * @param itemStack アイテム
      */
     private void showFlatItem(Player player, ItemStack itemStack) {
-        // アイテムを取得
-        boolean isBlock = AdvancementUtil.isBlock(CraftItemType.minecraftToBukkit(itemStack.getItem()));
-
         // アイテムディスプレイの幻覚
         Display.ItemDisplay itemDisplay = new Display.ItemDisplay(EntityType.ITEM_DISPLAY, ((CraftWorld) player.getWorld()).getHandle());
         itemDisplay.setItemStack(itemStack);
@@ -108,6 +109,28 @@ public class PanelDisplay {
                 .rotate((float) (-Math.PI / 2) - AdvancementUtil.getRotate(direction), new Vector3f(0, 1, 0)) // ブロックの向きに合わせる
                 .translate(0.235f, 0.27f, 0f) // マップ上の位置に合わせる
                 .scale(0.25f, 0.25f, 0.01f);
+        itemDisplay.setTransformation(new Transformation(transform));
+
+        ServerGamePacketListenerImpl connection = ((CraftPlayer) player).getHandle().connection;
+        connection.send(new ClientboundAddEntityPacket(itemDisplay, itemDisplay.getDirection().get3DDataValue()));
+        connection.send(new ClientboundSetEntityDataPacket(itemDisplay.getId(), itemDisplay.getEntityData().packDirty()));
+    }
+
+    private void showProgressBar(Player player, float progress) {
+        // プログレスバーディスプレイの幻覚
+        Display.ItemDisplay itemDisplay = new Display.ItemDisplay(EntityType.ITEM_DISPLAY, ((CraftWorld) player.getWorld()).getHandle());
+        itemDisplay.setItemStack(new ItemStack(CraftItemType.bukkitToMinecraft(Material.LIGHT_BLUE_CONCRETE)));
+        Location location = baseBlock.getLocation().clone().add(0.5, 0.5, 0.5).add(direction.getDirection().multiply(0.51));
+        itemDisplay.setPos(location.getX(), location.getY(), location.getZ());
+        itemDisplay.setBrightnessOverride(Brightness.FULL_BRIGHT);
+
+        // アイテムディスプレイの向き
+        // /summon item_display 1.5 -58.5 59.0 {transformation:{left_rotation:[0f,0f,0f,1f],right_rotation:[0f,0f,0f,1f],translation:[-0.575f,-0.344f,0f],scale:[1.96f,0.095f,0.018f]},item:{id:"minecraft:light_blue_concrete",Count:1b}}
+        float widthScale = 1.96f * progress;
+        Matrix4f transform = new Matrix4f()
+                .rotate((float) (-Math.PI / 2) - AdvancementUtil.getRotate(direction), new Vector3f(0, 1, 0)) // ブロックの向きに合わせる
+                .translate(-0.575f + (1 - widthScale / 2), -0.344f, 0f) // マップ上の位置に合わせる
+                .scale(widthScale, 0.095f, 0.018f); // スケール
         itemDisplay.setTransformation(new Transformation(transform));
 
         ServerGamePacketListenerImpl connection = ((CraftPlayer) player).getHandle().connection;
