@@ -2,32 +2,38 @@ package com.kamesuta.advancementcompetition.display;
 
 import com.kamesuta.advancementcompetition.AdvancementUtil;
 import com.mojang.math.Transformation;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+import net.minecraft.network.protocol.game.ClientboundMapItemDataPacket;
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.util.Brightness;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_20_R3.block.CraftBlock;
 import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemType;
 import org.bukkit.entity.Player;
-import org.bukkit.map.MinecraftFont;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -37,24 +43,48 @@ import static com.kamesuta.advancementcompetition.AdvancementCompetition.app;
  * 進捗表示レンダラー
  */
 public class PanelDisplay {
-    private Set<UUID> shown = new HashSet<>();
+    /**
+     * エンティティUUID開始番号
+     */
+    public static final int ENTITY_STARTING_ID = Integer.MAX_VALUE / 5;
+    /**
+     * エンティティUUIDカウンター
+     */
+    private static final AtomicInteger ENTITY_ID_COUNTER = new AtomicInteger(ENTITY_STARTING_ID);
 
+    /**
+     * 表示されているプレイヤー
+     */
+    private final Set<UUID> shown = new HashSet<>();
+
+    /**
+     * ブロック
+     */
     private final Block baseBlock;
+    /**
+     * 向き
+     */
     private final BlockFace direction;
-    private final List<FrameDisplay> frames;
 
+    /**
+     * エンティティID
+     */
+    private final int[] entityIds;
+
+    /**
+     * 進捗表示レンダラーを作成します。
+     *
+     * @param baseBlock ベースブロック
+     * @param direction 向き
+     */
     public PanelDisplay(Block baseBlock, BlockFace direction) {
         this.baseBlock = baseBlock;
         this.direction = direction;
-        this.frames = IntStream.range(0, AdvancementDisplay.mapLength)
-                .mapToObj(i -> {
-                    // ブロックを取得
-                    BlockFace rightFace = AdvancementUtil.getRight(direction.getOppositeFace());
-                    Block target = baseBlock.getRelative(rightFace, i);
 
-                    return new FrameDisplay(target.getRelative(direction).getLocation(), direction);
-                })
-                .collect(Collectors.toList());
+        // エンティティIDを生成
+        this.entityIds = IntStream.range(0, AdvancementDisplay.mapLength /* 額縁 */ + 4 /* =テキスト */ + 2 /* =アイテム */)
+                .map(i -> ENTITY_ID_COUNTER.getAndIncrement())
+                .toArray();
     }
 
     /**
@@ -64,28 +94,43 @@ public class PanelDisplay {
      */
     public void show(Player player) {
         if (this.shown.add(player.getUniqueId())) {
+            int k = 0;
+
             // アイテムを表示
-            showFlatItem(player, new ItemStack(Items.ACACIA_FENCE_GATE));
+            showFlatItem(player, entityIds[k++], new ItemStack(Items.ACACIA_FENCE_GATE));
 
             // テキストを表示
-            showText(player, "Hello, world!", 0.78f, 0.1f, 123, 0.5f, true);
-            showText(player, "説明", 0.6f, -0.2f, 220, 0.35f, false);
-            showText(player, "クリア率:1/2人(1位) 03/25 14:41取得", 0.6f, -0.477f, 220, 0.35f, true);
-            showText(player, "ランキング\n1.Kamesuta\n2.kumo_0621\n3.kei_55\n4.hina2113\n5.\n6.\n7.\n8.\n9.", 2.05f, -0.45f, 100, 0.3f, false);
+            showText(player, entityIds[k++], "Hello, world!", 0.78f, 0.1f, 123, 0.5f, true);
+            showText(player, entityIds[k++], "説明", 0.6f, -0.2f, 220, 0.35f, false);
+            showText(player, entityIds[k++], "クリア率:1/2人(1位) 03/25 14:41取得", 0.6f, -0.477f, 220, 0.35f, true);
+            showText(player, entityIds[k++], "ランキング\n1.Kamesuta\n2.kumo_0621\n3.kei_55\n4.hina2113\n5.\n6.\n7.\n8.\n9.", 2.05f, -0.45f, 100, 0.3f, false);
 
             // 進捗を表示
-            showProgressBar(player, 0.35f);
+            showProgressBar(player, entityIds[k++], 0.35f);
 
+            // マップを表示
+            BlockFace rightFace = AdvancementUtil.getRight(direction.getOppositeFace());
             for (int i = 0; i < AdvancementDisplay.mapLength; i++) {
                 // マップを取得
                 MapDisplay mapDisplay = app.display.panel.get(i);
 
-                // フレームを取得
-                FrameDisplay frameDisplay = frames.get(i);
+                // ブロックを取得
+                Location location = baseBlock.getRelative(rightFace, i).getRelative(direction).getLocation();
 
                 // プレイヤーにマップを表示
-                frameDisplay.createMap(player, mapDisplay);
+                showMap(player, entityIds[k++], mapDisplay, location);
             }
+        }
+    }
+
+    /**
+     * マップをプレイヤーから非表示にします。
+     */
+    public void hide(Player player) {
+        if (this.shown.remove(player.getUniqueId())) {
+            // エンティティを削除
+            ServerGamePacketListenerImpl connection = ((CraftPlayer) player).getHandle().connection;
+            connection.send(new ClientboundRemoveEntitiesPacket(entityIds));
         }
     }
 
@@ -93,11 +138,13 @@ public class PanelDisplay {
      * 平らなアイテムをパネルに表示します。
      *
      * @param player    プレイヤー
+     * @param id        ID
      * @param itemStack アイテム
      */
-    private void showFlatItem(Player player, ItemStack itemStack) {
+    private void showFlatItem(Player player, int id, ItemStack itemStack) {
         // アイテムディスプレイの幻覚
         Display.ItemDisplay itemDisplay = new Display.ItemDisplay(EntityType.ITEM_DISPLAY, ((CraftWorld) player.getWorld()).getHandle());
+        itemDisplay.setId(id);
         itemDisplay.setItemStack(itemStack);
         Location location = baseBlock.getLocation().clone().add(0.5, 0.5, 0.5).add(direction.getDirection().multiply(0.52));
         itemDisplay.setPos(location.getX(), location.getY(), location.getZ());
@@ -111,14 +158,23 @@ public class PanelDisplay {
                 .scale(0.25f, 0.25f, 0.01f);
         itemDisplay.setTransformation(new Transformation(transform));
 
+        // エンティティを送信
         ServerGamePacketListenerImpl connection = ((CraftPlayer) player).getHandle().connection;
         connection.send(new ClientboundAddEntityPacket(itemDisplay, itemDisplay.getDirection().get3DDataValue()));
         connection.send(new ClientboundSetEntityDataPacket(itemDisplay.getId(), itemDisplay.getEntityData().packDirty()));
     }
 
-    private void showProgressBar(Player player, float progress) {
+    /**
+     * プログレスバーを表示します。
+     *
+     * @param player   プレイヤー
+     * @param id       ID
+     * @param progress 進捗
+     */
+    private void showProgressBar(Player player, int id, float progress) {
         // プログレスバーディスプレイの幻覚
         Display.ItemDisplay itemDisplay = new Display.ItemDisplay(EntityType.ITEM_DISPLAY, ((CraftWorld) player.getWorld()).getHandle());
+        itemDisplay.setId(id);
         itemDisplay.setItemStack(new ItemStack(CraftItemType.bukkitToMinecraft(Material.LIGHT_BLUE_CONCRETE)));
         Location location = baseBlock.getLocation().clone().add(0.5, 0.5, 0.5).add(direction.getDirection().multiply(0.51));
         itemDisplay.setPos(location.getX(), location.getY(), location.getZ());
@@ -133,6 +189,7 @@ public class PanelDisplay {
                 .scale(widthScale, 0.095f, 0.018f); // スケール
         itemDisplay.setTransformation(new Transformation(transform));
 
+        // エンティティを送信
         ServerGamePacketListenerImpl connection = ((CraftPlayer) player).getHandle().connection;
         connection.send(new ClientboundAddEntityPacket(itemDisplay, itemDisplay.getDirection().get3DDataValue()));
         connection.send(new ClientboundSetEntityDataPacket(itemDisplay.getId(), itemDisplay.getEntityData().packDirty()));
@@ -142,15 +199,17 @@ public class PanelDisplay {
      * 平らなアイテムをパネルに表示します。
      *
      * @param player プレイヤー
+     * @param id     ID
      * @param text   テキスト
      * @param x      X座標
      * @param y      Y座標
      * @param scale  スケール
      * @param shadow 影
      */
-    private void showText(Player player, String text, float x, float y, int width, float scale, boolean shadow) {
+    private void showText(Player player, int id, String text, float x, float y, int width, float scale, boolean shadow) {
         // テキストディスプレイの幻覚
         Display.TextDisplay textDisplay = new Display.TextDisplay(EntityType.TEXT_DISPLAY, ((CraftWorld) player.getWorld()).getHandle());
+        textDisplay.setId(id);
         Location location = baseBlock.getLocation().clone().add(0.5, 0.5, 0.5).add(direction.getDirection().multiply(0.52));
         textDisplay.setPos(location.getX(), location.getY(), location.getZ());
         textDisplay.setBrightnessOverride(Brightness.FULL_BRIGHT);
@@ -171,8 +230,41 @@ public class PanelDisplay {
                 .scale(scale, scale, 1f); // スケール
         textDisplay.setTransformation(new Transformation(transform));
 
+        // エンティティを送信
         ServerGamePacketListenerImpl connection = ((CraftPlayer) player).getHandle().connection;
         connection.send(new ClientboundAddEntityPacket(textDisplay, textDisplay.getDirection().get3DDataValue()));
         connection.send(new ClientboundSetEntityDataPacket(textDisplay.getId(), textDisplay.getEntityData().packDirty()));
+    }
+
+    /**
+     * マップをプレイヤーに表示します。
+     *
+     * @param player   プレイヤー
+     * @param id       ID
+     * @param map      マップ
+     * @param location 位置
+     */
+    private void showMap(Player player, int id, MapDisplay map, Location location) {
+        // マップアイテムを作成
+        ItemStack item = new ItemStack(Items.FILLED_MAP);
+        item.getOrCreateTag().putInt("map", map.mapId);
+
+        // アイテムフレームを作成
+        ItemFrame frame = new ItemFrame(((CraftWorld) player.getWorld()).getHandle(),
+                BlockPos.containing(location.getX(), location.getY(), location.getZ()),
+                CraftBlock.blockFaceToNotch(direction));
+        frame.setId(id);
+        frame.setItem(item, false, false);
+        frame.setInvisible(true);
+        frame.setInvulnerable(true);
+        frame.setSilent(true);
+        frame.fixed = true;
+
+        // エンティティ+マップを送信
+        ServerGamePacketListenerImpl connection = ((CraftPlayer) player).getHandle().connection;
+        connection.send(new ClientboundAddEntityPacket(frame, frame.getDirection().get3DDataValue(), frame.getPos()));
+        connection.send(new ClientboundSetEntityDataPacket(frame.getId(), frame.getEntityData().packDirty()));
+        connection.send(new ClientboundMapItemDataPacket(map.mapId, (byte) 3, false,
+                Collections.emptyList(), new MapItemSavedData.MapPatch(0, 0, 128, 128, map.pixels)));
     }
 }
