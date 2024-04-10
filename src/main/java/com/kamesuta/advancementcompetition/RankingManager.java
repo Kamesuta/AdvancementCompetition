@@ -202,9 +202,9 @@ public class RankingManager implements AutoCloseable, Listener {
             // 上位のプレイヤーの進捗を取得
             if (limitTop > 0) {
                 try (PreparedStatement pstmt = conn.prepareStatement(
-                        "SELECT player_uuid, timestamp, RANK() OVER(ORDER BY timestamp DESC) FROM progress " +
+                        "SELECT player_uuid, timestamp, RANK() OVER(ORDER BY timestamp ASC) FROM progress " +
                                 "WHERE advancement_key = ? " +
-                                "ORDER BY timestamp DESC " +
+                                "ORDER BY timestamp ASC " +
                                 "LIMIT ?;"
                 )) {
                     // SQLを実行
@@ -225,10 +225,12 @@ public class RankingManager implements AutoCloseable, Listener {
             // 下位のプレイヤーの進捗を取得
             if (limitBottom > 0) {
                 try (PreparedStatement pstmt = conn.prepareStatement(
-                        "SELECT player_uuid, timestamp, RANK() OVER(ORDER BY timestamp DESC) FROM progress " +
+                        "SELECT * FROM (" +
+                                "SELECT player_uuid, timestamp, RANK() OVER(ORDER BY timestamp ASC) FROM progress " +
                                 "WHERE advancement_key = ? " +
-                                "ORDER BY timestamp ASC " +
-                                "LIMIT ?;"
+                                "ORDER BY timestamp DESC " +
+                                "LIMIT ?" +
+                                ") AS A ORDER BY timestamp ASC;"
                 )) {
                     // SQLを実行
                     pstmt.setString(1, key);
