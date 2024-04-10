@@ -18,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.logging.Level;
@@ -109,10 +110,18 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
+        getServer().getPluginManager().registerEvents(display, this);
+        // パネルを表示
+        display.showAll();
     }
 
     @Override
     public void onDisable() {
+        // パネルを非表示
+        if (display != null) {
+            display.hideAll();
+        }
+
         // Plugin shutdown logic
         if (rankingManager != null) {
             try {
@@ -174,7 +183,7 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
             viewer.seePlayerAdvancements(player, player);
         }
 
-        // 進捗を設置
+        // パネルを設置
         if (command.getName().equals("adv_place")) {
             // 自身を取得
             if (!(sender instanceof Player)) {
@@ -189,7 +198,7 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
                 return true;
             }
             // 進捗を取得
-            Advancement advancement = Bukkit.getAdvancement(NamespacedKey.minecraft(args[0].replaceFirst("^minecraft:", "")));
+            Advancement advancement = Optional.ofNullable(NamespacedKey.fromString(args[0])).map(Bukkit::getAdvancement).orElse(null);
             if (advancement == null) {
                 player.sendMessage("進捗が見つかりません");
                 return true;
@@ -201,6 +210,27 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
                 // 設置
                 try {
                     display.place(result.getHitBlock(), result.getHitBlockFace(), advancement);
+                } catch (IllegalArgumentException e) {
+                    sender.sendMessage(e.getMessage());
+                }
+            }
+        }
+
+        // パネルを削除
+        if (command.getName().equals("adv_destroy")) {
+            // 自身を取得
+            if (!(sender instanceof Player)) {
+                sender.sendMessage("このコマンドはプレイヤーのみ実行可能です");
+                return true;
+            }
+            Player player = (Player) sender;
+
+            // 目線の先を取得
+            RayTraceResult result = player.rayTraceBlocks(6, FluidCollisionMode.NEVER);
+            if (result != null && result.getHitBlock() != null && result.getHitBlockFace() != null) {
+                // 削除
+                try {
+                    display.destroy(result.getHitBlock(), result.getHitBlockFace());
                 } catch (IllegalArgumentException e) {
                     sender.sendMessage(e.getMessage());
                 }

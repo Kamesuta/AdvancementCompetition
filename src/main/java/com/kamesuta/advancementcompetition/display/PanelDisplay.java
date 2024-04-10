@@ -51,9 +51,9 @@ public class PanelDisplay {
      */
     public static final int ENTITY_STARTING_ID = Integer.MAX_VALUE / 5;
     /**
-     * エンティティUUIDカウンター
+     * エンティティ個数
      */
-    private static final AtomicInteger ENTITY_ID_COUNTER = new AtomicInteger(ENTITY_STARTING_ID);
+    public static final int ENTITY_COUNT = AdvancementDisplay.mapLength /* 額縁 */ + 4 /* =テキスト */ + 2 /* =アイテム */;
 
     /**
      * 表示されているプレイヤー
@@ -61,17 +61,21 @@ public class PanelDisplay {
     private final Set<UUID> shown = new HashSet<>();
 
     /**
+     * ID
+     */
+    public final int id;
+    /**
      * ブロック
      */
-    private final Block baseBlock;
+    public final Block baseBlock;
     /**
      * 向き
      */
-    private final BlockFace direction;
+    public final BlockFace direction;
     /**
      * 実績
      */
-    private final Advancement advancement;
+    public final Advancement advancement;
 
     /**
      * エンティティID
@@ -81,17 +85,20 @@ public class PanelDisplay {
     /**
      * 進捗表示レンダラーを作成します。
      *
-     * @param baseBlock ベースブロック
-     * @param direction 向き
+     * @param id          ID
+     * @param baseBlock   ベースブロック
+     * @param direction   向き
+     * @param advancement 実績
      */
-    public PanelDisplay(Block baseBlock, BlockFace direction, Advancement advancement) {
+    public PanelDisplay(int id, Block baseBlock, BlockFace direction, Advancement advancement) {
+        this.id = id;
         this.baseBlock = baseBlock;
         this.direction = direction;
         this.advancement = advancement;
 
         // エンティティIDを生成
-        this.entityIds = IntStream.range(0, AdvancementDisplay.mapLength /* 額縁 */ + 4 /* =テキスト */ + 2 /* =アイテム */)
-                .map(i -> ENTITY_ID_COUNTER.getAndIncrement())
+        this.entityIds = IntStream.range(0, ENTITY_COUNT)
+                .map(i -> ENTITY_STARTING_ID + id * ENTITY_COUNT + i)
                 .toArray();
     }
 
@@ -99,10 +106,11 @@ public class PanelDisplay {
      * マップをプレイヤーに表示します。
      *
      * @param player プレイヤー
+     * @param force  強制表示
      */
-    public void show(Player player) {
+    public void show(Player player, boolean force) {
         // 既に表示されている場合は表示しない
-        if (!this.shown.add(player.getUniqueId())) return;
+        if (!this.shown.add(player.getUniqueId()) && !force) return;
 
         // エンティティIDのカウンターのカウンター
         int k = 0;

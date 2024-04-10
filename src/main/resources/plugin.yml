@@ -29,3 +29,8 @@ commands:
     description: Place an advancement
     usage: /adv_place <advancement>
     permission: advancementcompetition.command.admin
+
+  adv_destroy:
+    description: Destroy an advancement
+    usage: /adv_destroy
+    permission: advancementcompetition.command.admin
