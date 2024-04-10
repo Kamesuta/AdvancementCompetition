@@ -157,6 +157,23 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
             viewer.seePlayerAdvancements(player, target);
         }
 
+        // ID表示
+        if (command.getName().equals("adv_id")) {
+            // 自身を取得
+            if (!(sender instanceof Player)) {
+                sender.sendMessage("このコマンドはプレイヤーのみ実行可能です");
+                return true;
+            }
+            CraftPlayer player = (CraftPlayer) sender;
+
+            player.sendTitle("「L」キーで進捗画面を開く", "進捗のIDを表示中...", 10, 100000, 10);
+            PlayerData playerData = playerDataManager.getPlayerData(player);
+            playerData.showId = true;
+            playerData.targetQueue = null;
+            playerData.needUpdate = true;
+            viewer.seePlayerAdvancements(player, player);
+        }
+
         // 進捗を設置
         if (command.getName().equals("adv_place")) {
             // 自身を取得

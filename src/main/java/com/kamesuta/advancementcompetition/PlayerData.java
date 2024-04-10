@@ -15,4 +15,8 @@ public class PlayerData {
      * 次回進捗メニューを開いたときに進捗を見る対象のプレイヤー
      */
     public @Nullable Player targetQueue;
+    /**
+     * IDを表示
+     */
+    public boolean showId = false;
 }

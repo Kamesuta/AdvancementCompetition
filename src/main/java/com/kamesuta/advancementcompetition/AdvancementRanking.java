@@ -81,6 +81,13 @@ public class AdvancementRanking {
                             ranking.appendRanking(description, ranking.bottom);
                         }
 
+                        // IDを表示
+                        if (playerData.showId) {
+                            description.append("\n\n")
+                                    .append(Component.literal("ID: ").withStyle(ChatFormatting.GRAY))
+                                    .append(Component.literal(holder.id().toString()).withStyle(ChatFormatting.GOLD));
+                        }
+
                         // 新しいDisplayInfoを作成
                         DisplayInfo copyDisplay = new DisplayInfo(display.getIcon(), title, description, display.getBackground(), display.getType(), display.shouldShowToast(), display.shouldAnnounceChat(), display.isHidden());
                         // 位置をコピー

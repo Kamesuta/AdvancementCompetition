@@ -16,8 +16,13 @@ permissions:
 
 commands:
   adv:
-    description: Main command for AdvancementCompetition
-    usage: /adv [admin]
+    description: Show player's advancements
+    usage: /adv <player>
+    permission: advancementcompetition.command.adv
+
+  adv_id:
+    description: Show ID of the advancements
+    usage: /adv_id
     permission: advancementcompetition.command.adv
 
   adv_place:

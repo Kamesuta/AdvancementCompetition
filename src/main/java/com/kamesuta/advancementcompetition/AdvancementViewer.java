@@ -107,7 +107,7 @@ public class AdvancementViewer {
     }
 
     /**
-     * 進捗タブが開かれた
+     * 進捗タブが閉じられた
      *
      * @param viewer 見るプレイヤー
      */
@@ -116,6 +116,8 @@ public class AdvancementViewer {
         PlayerData playerData = app.playerDataManager.getPlayerData(viewer);
         // ターゲットをリセット
         playerData.targetQueue = null;
+        // ID表示をリセット
+        playerData.showId = false;
         // 元に戻す
         seePlayerAdvancements((CraftPlayer) viewer, (CraftPlayer) viewer);
     }
