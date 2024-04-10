@@ -1,7 +1,9 @@
 package com.kamesuta.advancementcompetition.display;
 
 import com.kamesuta.advancementcompetition.AdvancementUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.event.Listener;
@@ -92,7 +94,7 @@ public class AdvancementDisplay implements Listener {
         }
 
         // マップを取得
-        PanelDisplay display = new PanelDisplay(block, face);
+        PanelDisplay display = new PanelDisplay(block, face, Bukkit.getAdvancement(NamespacedKey.minecraft("story/root")));
         displays.add(display);
         block.getLocation().getNearbyPlayers(16).forEach(display::show);
     }

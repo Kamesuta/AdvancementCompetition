@@ -105,7 +105,7 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
     @Override
     public void onDisable() {
         // Plugin shutdown logic
-        if (playerDataManager != null) {
+        if (rankingManager != null) {
             try {
                 rankingManager.close();
             } catch (Exception e) {

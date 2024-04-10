@@ -20,7 +20,6 @@ import java.util.ListIterator;
 import java.util.Optional;
 
 import static com.kamesuta.advancementcompetition.AdvancementCompetition.app;
-import static com.kamesuta.advancementcompetition.AdvancementUtil.TIME_FORMATTER;
 
 /**
  * ランキング表示
@@ -62,48 +61,24 @@ public class AdvancementRanking {
                         // タイトル 「進捗名 (プレイヤー名の進捗)」
                         Component title = Component.empty().append(display.getTitle()).append(Component.literal(titleSuffix).withStyle(ChatFormatting.GRAY));
 
-                        // 説明 「進捗説明\n\nクリア率:%d/%d人(%d位)」
-                        String rank = (ranking.progress != null && ranking.progress.rank >= 0) ? ranking.progress.rank + "位" : "未達成";
+                        // 説明
                         MutableComponent description = Component.empty()
                                 .append(display.getDescription())
-                                .append("\n\n")
-                                .append(Component.literal(String.format("クリア率:%d/%d人(%s)", ranking.done, ranking.total, rank)).withStyle(ChatFormatting.YELLOW));
-                        // 取得日時を追加
-                        if (ranking.progress != null) {
-                            // MM/dd HH:mm形式に変換
-                            String date = TIME_FORMATTER.format(ranking.progress.timestamp);
-                            description.append(" ")
-                                    .append(Component.literal(date + "取得").withStyle(ChatFormatting.GRAY));
-                        }
+                                .append("\n\n");
+                        // 説明 「進捗説明\n\nクリア率:%d/%d人(%d位)」
+                        ranking.appendProgressDescription(description);
 
                         // 上位3人の進捗を追加
                         if (!ranking.top.isEmpty()) {
                             description.append("\n\n")
                                     .append(Component.literal("トップ3").withStyle(ChatFormatting.GOLD));
-                            for (RankingProgressData.PlayerProgress progress : ranking.top) {
-                                // プレイヤー名を取得
-                                String name = progress.player.getName();
-                                // 進捗を取得
-                                String time = TIME_FORMATTER.format(progress.timestamp);
-                                // ランキングを追加
-                                description.append("\n")
-                                        .append(Component.literal(String.format("%d位:%s(%s)", progress.rank, name, time)).withStyle(ChatFormatting.GRAY));
-                            }
+                            ranking.appendRanking(description, ranking.top);
                         }
-
                         // 直近3人の進捗を追加 (6人以上の場合)
                         if (!ranking.bottom.isEmpty() && ranking.total >= 6) {
                             description.append("\n\n")
                                     .append(Component.literal("直近達成3位").withStyle(ChatFormatting.BLUE));
-                            for (RankingProgressData.PlayerProgress progress : ranking.bottom) {
-                                // プレイヤー名を取得
-                                String name = progress.player.getName();
-                                // 進捗を取得
-                                String time = TIME_FORMATTER.format(progress.timestamp);
-                                // ランキングを追加
-                                description.append("\n")
-                                        .append(Component.literal(String.format("%d位:%s(%s)", progress.rank, name, time)).withStyle(ChatFormatting.GRAY));
-                            }
+                            ranking.appendRanking(description, ranking.bottom);
                         }
 
                         // 新しいDisplayInfoを作成

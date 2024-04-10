@@ -3,9 +3,11 @@ package com.kamesuta.advancementcompetition;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 /**
  * ユーティリティ
@@ -79,5 +81,31 @@ public class AdvancementUtil {
      */
     public static boolean isBlock(Material type) {
         return type.isSolid() && !type.toString().equals("AMETHYST_CLUSTER") && !type.toString().equals("POINTED_DRIPSTONE");
+    }
+
+    /**
+     * UUIDをバイト配列に変換
+     *
+     * @param uuid UUID
+     * @return バイト配列
+     */
+    public static byte[] uuidToBytes(UUID uuid) {
+        return ByteBuffer.wrap(new byte[16])
+                .order(java.nio.ByteOrder.BIG_ENDIAN)
+                .putLong(uuid.getMostSignificantBits())
+                .putLong(uuid.getLeastSignificantBits())
+                .array();
+    }
+
+    /**
+     * バイト配列をUUIDに変換
+     *
+     * @param bytes バイト配列
+     * @return UUID
+     */
+    public static UUID bytesToUuid(byte[] bytes) {
+        ByteBuffer buffer = ByteBuffer.wrap(bytes)
+                .order(java.nio.ByteOrder.BIG_ENDIAN);
+        return new UUID(buffer.getLong(), buffer.getLong());
     }
 }

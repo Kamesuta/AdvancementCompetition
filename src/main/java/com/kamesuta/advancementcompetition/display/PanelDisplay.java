@@ -1,9 +1,13 @@
 package com.kamesuta.advancementcompetition.display;
 
 import com.kamesuta.advancementcompetition.AdvancementUtil;
+import com.kamesuta.advancementcompetition.RankingProgressData;
 import com.mojang.math.Transformation;
+import net.minecraft.ChatFormatting;
+import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundMapItemDataPacket;
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
@@ -19,9 +23,11 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.advancement.Advancement;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_20_R3.advancement.CraftAdvancement;
 import org.bukkit.craftbukkit.v1_20_R3.block.CraftBlock;
 import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemType;
@@ -29,10 +35,7 @@ import org.bukkit.entity.Player;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -65,6 +68,10 @@ public class PanelDisplay {
      * 向き
      */
     private final BlockFace direction;
+    /**
+     * 実績
+     */
+    private final Advancement advancement;
 
     /**
      * エンティティID
@@ -77,9 +84,10 @@ public class PanelDisplay {
      * @param baseBlock ベースブロック
      * @param direction 向き
      */
-    public PanelDisplay(Block baseBlock, BlockFace direction) {
+    public PanelDisplay(Block baseBlock, BlockFace direction, Advancement advancement) {
         this.baseBlock = baseBlock;
         this.direction = direction;
+        this.advancement = advancement;
 
         // エンティティIDを生成
         this.entityIds = IntStream.range(0, AdvancementDisplay.mapLength /* 額縁 */ + 4 /* =テキスト */ + 2 /* =アイテム */)
@@ -93,33 +101,76 @@ public class PanelDisplay {
      * @param player プレイヤー
      */
     public void show(Player player) {
-        if (this.shown.add(player.getUniqueId())) {
-            int k = 0;
+        // 既に表示されている場合は表示しない
+        if (!this.shown.add(player.getUniqueId())) return;
 
-            // アイテムを表示
-            showFlatItem(player, entityIds[k++], new ItemStack(Items.ACACIA_FENCE_GATE));
+        // エンティティIDのカウンターのカウンター
+        int k = 0;
 
-            // テキストを表示
-            showText(player, entityIds[k++], "Hello, world!", 0.78f, 0.1f, 123, 0.5f, true);
-            showText(player, entityIds[k++], "説明", 0.6f, -0.2f, 220, 0.35f, false);
-            showText(player, entityIds[k++], "クリア率:1/2人(1位) 03/25 14:41取得", 0.6f, -0.477f, 220, 0.35f, true);
-            showText(player, entityIds[k++], "ランキング\n1.Kamesuta\n2.kumo_0621\n3.kei_55\n4.hina2113\n5.\n6.\n7.\n8.\n9.", 2.05f, -0.45f, 100, 0.3f, false);
+        // ランキングを取得
+        RankingProgressData ranking = app.rankingManager.getAdvancementProgressData(player, advancement, 10, 5);
 
-            // 進捗を表示
-            showProgressBar(player, entityIds[k++], 0.35f);
+        // 実績ディスプレイを取得
+        CraftAdvancement craftAdvancement = (CraftAdvancement) advancement;
+        Optional<DisplayInfo> displayOptional = craftAdvancement.getHandle().value().display();
 
-            // マップを表示
-            BlockFace rightFace = AdvancementUtil.getRight(direction.getOppositeFace());
-            for (int i = 0; i < AdvancementDisplay.mapLength; i++) {
-                // マップを取得
-                MapDisplay mapDisplay = app.display.panel.get(i);
+        // ランキングやディスプレイ情報が取得できなかったら表示しない
+        if (ranking == null || !displayOptional.isPresent()) return;
+        DisplayInfo display = displayOptional.get();
 
-                // ブロックを取得
-                Location location = baseBlock.getRelative(rightFace, i).getRelative(direction).getLocation();
+        // アイテムを表示
+        showFlatItem(player, entityIds[k++], display.getIcon());
 
-                // プレイヤーにマップを表示
-                showMap(player, entityIds[k++], mapDisplay, location);
-            }
+        // ステータス
+        MutableComponent status = Component.empty();
+        // ステータス 「進捗説明\n\nクリア率:%d/%d人(%d位)」
+        ranking.appendProgressDescription(status);
+
+        // ランキング
+        MutableComponent leaderboard = Component.empty();
+        // 上位10人の進捗を追加
+        if (!ranking.top.isEmpty()) {
+            leaderboard.append(Component.literal("トップ10").withStyle(ChatFormatting.GOLD));
+            ranking.appendRanking(leaderboard, ranking.top);
+            ranking.appendBlankLines(leaderboard, 10, ranking.top.size());
+        }
+        // 直近5人の進捗を追加 (15人以上の場合)
+        if (!ranking.bottom.isEmpty() && ranking.total >= 15) {
+            leaderboard.append("\n\n")
+                    .append(Component.literal("直近達成5位").withStyle(ChatFormatting.BLUE));
+            ranking.appendRanking(leaderboard, ranking.bottom);
+            ranking.appendBlankLines(leaderboard, 5, ranking.bottom.size());
+        } else {
+            ranking.appendBlankLines(leaderboard, 7, 0);
+        }
+
+        // テキストを表示
+        showText(player, entityIds[k++], display.getTitle(), 0.78f, 0.1f, 123, 0.5f, true);
+        showText(player, entityIds[k++], display.getDescription(), 0.6f, -0.2f, 220, 0.35f, false);
+        showText(player, entityIds[k++], status, 0.6f, -0.477f, 220, 0.35f, true);
+        showText(player, entityIds[k++], leaderboard, 2.05f, -0.45f, 180, 0.18f, false);
+
+        // 進捗を表示
+        if (ranking.total > 0) {
+            showProgressBar(player, entityIds[k++], ranking.done / (float) ranking.total);
+        }
+
+        // マップを取得
+        List<MapDisplay> panel = (ranking.progress != null && ranking.progress.rank >= 0)
+                ? app.display.panelDone // 達成済み
+                : app.display.panel; // 未達成
+
+        // マップを表示
+        BlockFace rightFace = AdvancementUtil.getRight(direction.getOppositeFace());
+        for (int i = 0; i < AdvancementDisplay.mapLength; i++) {
+            // マップを取得
+            MapDisplay mapDisplay = panel.get(i);
+
+            // ブロックを取得
+            Location location = baseBlock.getRelative(rightFace, i).getRelative(direction).getLocation();
+
+            // プレイヤーにマップを表示
+            showMap(player, entityIds[k++], mapDisplay, location);
         }
     }
 
@@ -127,11 +178,12 @@ public class PanelDisplay {
      * マップをプレイヤーから非表示にします。
      */
     public void hide(Player player) {
-        if (this.shown.remove(player.getUniqueId())) {
-            // エンティティを削除
-            ServerGamePacketListenerImpl connection = ((CraftPlayer) player).getHandle().connection;
-            connection.send(new ClientboundRemoveEntitiesPacket(entityIds));
-        }
+        // 既に非表示の場合は非表示しない
+        if (!this.shown.remove(player.getUniqueId())) return;
+
+        // エンティティを削除
+        ServerGamePacketListenerImpl connection = ((CraftPlayer) player).getHandle().connection;
+        connection.send(new ClientboundRemoveEntitiesPacket(entityIds));
     }
 
     /**
@@ -206,7 +258,7 @@ public class PanelDisplay {
      * @param scale  スケール
      * @param shadow 影
      */
-    private void showText(Player player, int id, String text, float x, float y, int width, float scale, boolean shadow) {
+    private void showText(Player player, int id, Component text, float x, float y, int width, float scale, boolean shadow) {
         // テキストディスプレイの幻覚
         Display.TextDisplay textDisplay = new Display.TextDisplay(EntityType.TEXT_DISPLAY, ((CraftWorld) player.getWorld()).getHandle());
         textDisplay.setId(id);
@@ -221,7 +273,7 @@ public class PanelDisplay {
         int SPACE_WIDTH = 4;
         String space = IntStream.range(0, Math.max(0, width / SPACE_WIDTH)).mapToObj(i -> " ").collect(Collectors.joining());
         // テキストを設定
-        textDisplay.setText(Component.literal(text + "\n " + space));
+        textDisplay.setText(Component.empty().append(text).append("\n " + space));
 
         // テキストディスプレイの向き
         Matrix4f transform = new Matrix4f()
