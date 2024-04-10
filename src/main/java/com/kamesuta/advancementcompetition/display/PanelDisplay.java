@@ -133,9 +133,13 @@ public class PanelDisplay {
             leaderboard.append(Component.literal("トップ10").withStyle(ChatFormatting.GOLD));
             ranking.appendRanking(leaderboard, ranking.top);
             ranking.appendBlankLines(leaderboard, 10, ranking.top.size());
+        } else {
+            leaderboard.append(Component.literal("まだ誰も達成していません。").withStyle(ChatFormatting.BLUE))
+                    .append(Component.literal("\n\n"))
+                    .append(Component.literal("実績に挑戦して\n1番目の達成者になりましょう！").withStyle(ChatFormatting.YELLOW));
         }
         // 直近5人の進捗を追加 (15人以上の場合)
-        if (!ranking.bottom.isEmpty() && ranking.total >= 15) {
+        if (!ranking.bottom.isEmpty() && ranking.done >= 15) {
             leaderboard.append("\n\n")
                     .append(Component.literal("直近達成5位").withStyle(ChatFormatting.BLUE));
             ranking.appendRanking(leaderboard, ranking.bottom);
@@ -148,7 +152,7 @@ public class PanelDisplay {
         showText(player, entityIds[k++], display.getTitle(), 0.78f, 0.1f, 123, 0.5f, true);
         showText(player, entityIds[k++], display.getDescription(), 0.6f, -0.2f, 220, 0.35f, false);
         showText(player, entityIds[k++], status, 0.6f, -0.477f, 220, 0.35f, true);
-        showText(player, entityIds[k++], leaderboard, 2.05f, -0.45f, 180, 0.18f, false);
+        showText(player, entityIds[k++], leaderboard, 2.075f, -0.45f, 180, 0.18f, false);
 
         // 進捗を表示
         if (ranking.total > 0) {
