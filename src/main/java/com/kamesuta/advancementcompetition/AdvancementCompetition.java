@@ -5,6 +5,8 @@ import com.comphenix.protocol.ProtocolManager;
 import com.kamesuta.advancementcompetition.display.AdvancementDisplay;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
+import org.bukkit.NamespacedKey;
+import org.bukkit.advancement.Advancement;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
@@ -12,10 +14,17 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.RayTraceResult;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * プラグイン
@@ -115,7 +124,7 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
     }
 
     // コマンドハンドラ
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String[] args) {
         // 他人の進捗を見る
         if (command.getName().equals("adv")) {
             // 自身を取得
@@ -157,12 +166,24 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
             }
             Player player = (Player) sender;
 
+            // 引数を取得
+            if (args.length != 1) {
+                player.sendMessage("進捗IDを指定してください /adv_place story/root");
+                return true;
+            }
+            // 進捗を取得
+            Advancement advancement = Bukkit.getAdvancement(NamespacedKey.minecraft(args[0].replaceFirst("^minecraft:", "")));
+            if (advancement == null) {
+                player.sendMessage("進捗が見つかりません");
+                return true;
+            }
+
             // 目線の先を取得
             RayTraceResult result = player.rayTraceBlocks(6, FluidCollisionMode.NEVER);
-            if (result != null) {
+            if (result != null && result.getHitBlock() != null && result.getHitBlockFace() != null) {
                 // 設置
                 try {
-                    display.place(result.getHitBlock(), result.getHitBlockFace());
+                    display.place(result.getHitBlock(), result.getHitBlockFace(), advancement);
                 } catch (IllegalArgumentException e) {
                     sender.sendMessage(e.getMessage());
                 }
@@ -170,5 +191,28 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
         }
 
         return true;
+    }
+
+    // タブ補完
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, Command command, @NotNull String alias, String[] args) {
+        // 他人の進捗を見る
+        if (command.getName().equals("adv")) {
+            return Stream.concat(Stream.of("<player>の進捗を見る"), Bukkit.getOnlinePlayers().stream().map(Player::getName))
+                    .filter(name -> name.startsWith(args[0]))
+                    .collect(Collectors.toList());
+        }
+
+        // 進捗を設置
+        if (command.getName().equals("adv_place")) {
+            Stream<Advancement> advancements = StreamSupport.stream(
+                    Spliterators.spliteratorUnknownSize(Bukkit.advancementIterator(), Spliterator.ORDERED),
+                    false
+            );
+            return Stream.concat(Stream.of("<進捗ID>"), advancements.map(advancement -> advancement.getKey().value()))
+                    .filter(name -> name.startsWith(args[0]))
+                    .collect(Collectors.toList());
+        }
+        return null;
     }
 }

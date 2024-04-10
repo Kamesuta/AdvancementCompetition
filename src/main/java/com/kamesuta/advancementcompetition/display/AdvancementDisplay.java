@@ -4,6 +4,7 @@ import com.kamesuta.advancementcompetition.AdvancementUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.advancement.Advancement;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.event.Listener;
@@ -76,10 +77,11 @@ public class AdvancementDisplay implements Listener {
     /**
      * パネルを設置
      *
-     * @param block 基準ブロック
-     * @param face  基準ブロックの向き
+     * @param block       基準ブロック
+     * @param face        基準ブロックの向き
+     * @param advancement
      */
-    public void place(Block block, BlockFace face) {
+    public void place(Block block, BlockFace face, Advancement advancement) {
         if (!face.isCartesian() || face == BlockFace.UP || face == BlockFace.DOWN) {
             throw new IllegalArgumentException("額縁は横向きに設置してください");
         }
@@ -94,7 +96,7 @@ public class AdvancementDisplay implements Listener {
         }
 
         // マップを取得
-        PanelDisplay display = new PanelDisplay(block, face, Bukkit.getAdvancement(NamespacedKey.minecraft("story/root")));
+        PanelDisplay display = new PanelDisplay(block, face, advancement);
         displays.add(display);
         block.getLocation().getNearbyPlayers(16).forEach(display::show);
     }
