@@ -71,7 +71,7 @@ public class AdvancementRanking {
                         // 上位3人の進捗を追加
                         if (!ranking.top.isEmpty()) {
                             description.append("\n\n")
-                                    .append(Component.literal("トップ3").withStyle(ChatFormatting.GOLD));
+                                    .append(Component.literal("トップ3").withStyle(ChatFormatting.YELLOW));
                             ranking.appendRanking(description, ranking.top);
                         }
                         // 直近3人の進捗を追加 (6人以上の場合)

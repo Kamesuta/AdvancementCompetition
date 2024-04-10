@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -72,13 +73,32 @@ public class RankingProgressData {
      */
     public void appendRanking(MutableComponent description, List<PlayerProgress> ranking) {
         for (PlayerProgress progress : ranking) {
-            // プレイヤー名を取得
-            String name = progress.player.getName();
+            // プレイヤー名
+            MutableComponent name = Component.literal(Optional.ofNullable(progress.player.getName()).orElse("不明"));
+            if (this.progress != null && progress.player.equals(this.progress.player)) {
+                // 自分の進捗
+                name.withStyle(ChatFormatting.GREEN);
+            }
+
+            // ランク
+            MutableComponent rank = Component.literal(String.format("%d位", progress.rank));
+            switch (progress.rank) {
+                case 1:
+                    rank.withStyle(ChatFormatting.GOLD);
+                    break;
+                case 2:
+                    rank.withStyle(ChatFormatting.AQUA);
+                    break;
+                case 3:
+                    rank.withStyle(ChatFormatting.RED);
+                    break;
+            }
+
             // 進捗を取得
             String time = TIME_FORMATTER.format(progress.timestamp);
             // ランキングを追加
             description.append("\n")
-                    .append(Component.literal(String.format("%d位:%s(%s)", progress.rank, name, time)).withStyle(ChatFormatting.GRAY));
+                    .append(Component.empty().append(rank).append(":").append(name).append(String.format("(%s)", time)).withStyle(ChatFormatting.GRAY));
         }
     }
 

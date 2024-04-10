@@ -130,7 +130,7 @@ public class PanelDisplay {
         MutableComponent leaderboard = Component.empty();
         // 上位10人の進捗を追加
         if (!ranking.top.isEmpty()) {
-            leaderboard.append(Component.literal("トップ10").withStyle(ChatFormatting.GOLD));
+            leaderboard.append(Component.literal("トップ10").withStyle(ChatFormatting.YELLOW));
             ranking.appendRanking(leaderboard, ranking.top);
             ranking.appendBlankLines(leaderboard, 10, ranking.top.size());
         } else {
