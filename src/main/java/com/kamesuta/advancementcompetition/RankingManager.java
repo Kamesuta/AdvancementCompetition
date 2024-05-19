@@ -40,14 +40,8 @@ public class RankingManager implements AutoCloseable, Listener {
      * SQLデータベースを初期化する
      */
     public RankingManager() throws SQLException {
-        // データベースを初期化する
-        FileConfiguration config = app.getConfig();
-        String url = "jdbc:mysql://" + config.getString("mysql.host") + ":" + config.getString("mysql.port") + "/" + config.getString("mysql.databaseName");
-        String username = config.getString("mysql.username");
-        String password = config.getString("mysql.password");
-
-        // SQLデータベースに接続する
-        conn = DriverManager.getConnection(url, username, password);
+         // データベースを初期化する
+       conn = getConnection();
 
         // テーブルを作成する
         try (Statement stmt = conn.createStatement()) {
@@ -103,6 +97,43 @@ public class RankingManager implements AutoCloseable, Listener {
     public void close() throws SQLException {
         if (conn != null) {
             conn.close();
+        }
+    }
+
+    /**
+     * データベースに接続する
+     * @return 接続
+     * @throws SQLException SQL例外
+     */
+    private Connection getConnection() throws SQLException {
+        // データベースを初期化する
+        FileConfiguration config = app.getConfig();
+        String url = "jdbc:mysql://" + config.getString("mysql.host") + ":" + config.getString("mysql.port") + "/" + config.getString("mysql.databaseName");
+        String username = config.getString("mysql.username");
+        String password = config.getString("mysql.password");
+
+        // SQLデータベースに接続する
+        return DriverManager.getConnection(url, username, password);
+    }
+
+    /**
+     * データベースにpingを送信して接続を維持する
+     */
+    public void pingDatabase() {
+        Statement stmt = null;
+        try {
+            stmt = conn.createStatement();
+            stmt.executeQuery("SELECT 1;");
+            stmt.close();
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "KeepAliveパケット(ping)の送信に失敗しました", e);
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException e) {
+            }
         }
     }
 

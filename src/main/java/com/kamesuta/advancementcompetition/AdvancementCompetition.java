@@ -94,6 +94,11 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
         }
         getServer().getPluginManager().registerEvents(rankingManager, this);
 
+        // 定期的にSQLのPingを送信
+        getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+            rankingManager.pingDatabase();
+        }, 0, 300 * 20);
+
         // Viewer初期化
         viewer = new AdvancementViewer();
         viewer.register();
