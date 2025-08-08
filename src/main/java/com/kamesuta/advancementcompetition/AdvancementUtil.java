@@ -1,8 +1,5 @@
 package com.kamesuta.advancementcompetition;
 
-import org.bukkit.Material;
-import org.bukkit.block.BlockFace;
-
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
@@ -38,49 +35,6 @@ public class AdvancementUtil {
      */
     private static int getByteLength(String string) {
         return string.getBytes(StandardCharsets.UTF_8).length;
-    }
-
-    /**
-     * ブロックの右側を取得
-     *
-     * @param face ブロックの向き
-     * @return 右側の向き
-     */
-    public static BlockFace getRight(BlockFace face) {
-        switch (face) {
-            case NORTH:
-                return BlockFace.EAST;
-            case EAST:
-                return BlockFace.SOUTH;
-            case SOUTH:
-                return BlockFace.WEST;
-            case WEST:
-                return BlockFace.NORTH;
-            default:
-                return face;
-        }
-    }
-
-    /**
-     * ブロックの向きを取得
-     *
-     * @param direction ブロックの向き
-     * @return 回転角度 (ラジアン)
-     */
-    public static float getRotate(BlockFace direction) {
-        int modX = direction.getModX();
-        int modZ = direction.getModZ();
-        return (float) Math.atan2(modZ, modX);
-    }
-
-    /**
-     * ブロックかどうか判定
-     *
-     * @param type ブロックの種類
-     * @return ブロックかどうか
-     */
-    public static boolean isBlock(Material type) {
-        return type.isSolid() && !type.toString().equals("AMETHYST_CLUSTER") && !type.toString().equals("POINTED_DRIPSTONE");
     }
 
     /**

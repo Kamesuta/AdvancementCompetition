@@ -24,13 +24,3 @@ commands:
     description: Show ID of the advancements
     usage: /adv_id
     permission: advancementcompetition.command.adv
-
-  adv_place:
-    description: Place an advancement
-    usage: /adv_place <advancement>
-    permission: advancementcompetition.command.admin
-
-  adv_destroy:
-    description: Destroy an advancement
-    usage: /adv_destroy
-    permission: advancementcompetition.command.admin

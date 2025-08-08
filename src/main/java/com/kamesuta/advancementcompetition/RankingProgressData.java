@@ -9,8 +9,6 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static com.kamesuta.advancementcompetition.AdvancementUtil.TIME_FORMATTER;
 
@@ -100,17 +98,6 @@ public class RankingProgressData {
             description.append("\n")
                     .append(Component.empty().append(rank).append(":").append(name).append(String.format("(%s)", time)).withStyle(ChatFormatting.GRAY));
         }
-    }
-
-    /**
-     * ランキングが足りない場合に空白行を追加します
-     *
-     * @param description   出力先
-     * @param expectedLines 期待される行数
-     * @param shownLines    表示された行数
-     */
-    public void appendBlankLines(MutableComponent description, int expectedLines, int shownLines) {
-        description.append(IntStream.range(0, Math.max(0, expectedLines - shownLines)).mapToObj(i -> "\n").collect(Collectors.joining()));
     }
 
     /**
