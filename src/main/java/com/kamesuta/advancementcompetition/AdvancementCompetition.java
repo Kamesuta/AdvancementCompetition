@@ -193,6 +193,16 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
                     .filter(name -> name.startsWith(args[0]))
                     .collect(Collectors.toList());
         }
+        
+        // 管理者コマンド
+        if (command.getName().equals("adv_admin")) {
+            if (args.length == 1) {
+                return List.of("import_json_to_db").stream()
+                        .filter(cmd -> cmd.startsWith(args[0]))
+                        .collect(Collectors.toList());
+            }
+        }
+        
         return null;
     }
 }
