@@ -14,8 +14,8 @@ import net.minecraft.server.PlayerAdvancements;
 import net.minecraft.server.ServerAdvancementManager;
 import net.minecraft.server.advancements.AdvancementVisibilityEvaluator;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_20_R3.CraftServer;
-import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.CraftServer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -63,7 +63,7 @@ public class AdvancementViewer {
         }
 
         // 進捗を送信する
-        viewer.getHandle().connection.send(new ClientboundUpdateAdvancementsPacket(true, toAdd, toRemove, toUpdate));
+        viewer.getHandle().connection.send(new ClientboundUpdateAdvancementsPacket(true, toAdd, toRemove, toUpdate, false));
     }
 
     /**

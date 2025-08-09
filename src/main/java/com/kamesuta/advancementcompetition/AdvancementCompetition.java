@@ -5,7 +5,7 @@ import com.comphenix.protocol.ProtocolManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -105,7 +105,7 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
     }
 
     // コマンドハンドラ
-    public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String @NotNull [] args) {
         // 他人の進捗を見る
         if (command.getName().equals("adv")) {
             // 自身を取得
@@ -160,7 +160,7 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
 
     // タブ補完
     @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, Command command, @NotNull String alias, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, Command command, @NotNull String alias, String @NotNull [] args) {
         // 他人の進捗を見る
         if (command.getName().equals("adv")) {
             return Stream.concat(Stream.of("<player>の進捗を見る"), Bukkit.getOnlinePlayers().stream().map(Player::getName))
