@@ -101,20 +101,10 @@ public class RankingManager implements AutoCloseable, Listener {
      * データベースにpingを送信して接続を維持する
      */
     public void pingDatabase() {
-        Statement stmt = null;
-        try {
-            stmt = conn.createStatement();
+        try (Statement stmt = conn.createStatement()) {
             stmt.executeQuery("SELECT 1;");
-            stmt.close();
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "KeepAliveパケット(ping)の送信に失敗しました", e);
-        } finally {
-            try {
-                if (stmt != null) {
-                    stmt.close();
-                }
-            } catch (SQLException e) {
-            }
         }
     }
 

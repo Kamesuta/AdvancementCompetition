@@ -69,16 +69,16 @@ public class AdvancementRanking {
                         ranking.appendProgressDescription(description);
 
                         // 上位3人の進捗を追加
-                        if (!ranking.top.isEmpty()) {
+                        if (!ranking.top().isEmpty()) {
                             description.append("\n\n")
                                     .append(Component.literal("トップ3").withStyle(ChatFormatting.YELLOW));
-                            ranking.appendRanking(description, ranking.top);
+                            ranking.appendRanking(description, ranking.top());
                         }
                         // 直近3人の進捗を追加 (6人以上の場合)
-                        if (!ranking.bottom.isEmpty() && ranking.done >= 6) {
+                        if (!ranking.bottom().isEmpty() && ranking.done() >= 6) {
                             description.append("\n\n")
                                     .append(Component.literal("直近達成3位").withStyle(ChatFormatting.BLUE));
-                            ranking.appendRanking(description, ranking.bottom);
+                            ranking.appendRanking(description, ranking.bottom());
                         }
 
                         // IDを表示

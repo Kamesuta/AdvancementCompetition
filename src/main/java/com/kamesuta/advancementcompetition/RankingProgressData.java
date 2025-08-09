@@ -14,36 +14,20 @@ import static com.kamesuta.advancementcompetition.AdvancementUtil.TIME_FORMATTER
 
 /**
  * ランキングの進捗データ
+ *
+ * @param total    トータルのプレイヤー数
+ * @param done     達成したプレイヤーの数
+ * @param progress 現在のプレイヤーの進捗
+ * @param top      上位のプレイヤーの進捗
+ * @param bottom   下位のプレイヤーの進捗
  */
-public class RankingProgressData {
-    /**
-     * トータルのプレイヤー数
-     */
-    public final int total;
-    /**
-     * 達成したプレイヤーの数
-     */
-    public final int done;
-    /**
-     * 現在のプレイヤーの進捗
-     */
-    public final @Nullable PlayerProgress progress;
-    /**
-     * 上位のプレイヤーの進捗
-     */
-    public final List<PlayerProgress> top;
-    /**
-     * 下位のプレイヤーの進捗
-     */
-    public final List<PlayerProgress> bottom;
-
-    public RankingProgressData(int total, int done, @Nullable PlayerProgress progress, List<PlayerProgress> top, List<PlayerProgress> bottom) {
-        this.total = total;
-        this.done = done;
-        this.progress = progress;
-        this.top = top;
-        this.bottom = bottom;
-    }
+public record RankingProgressData(
+        int total,
+        int done,
+        @Nullable PlayerProgress progress,
+        List<PlayerProgress> top,
+        List<PlayerProgress> bottom
+) {
 
     /**
      * 進捗説明を追加します
@@ -102,25 +86,11 @@ public class RankingProgressData {
 
     /**
      * プレイヤーの進捗
+     *
+     * @param player    プレイヤー
+     * @param timestamp 進捗のタイムスタンプ
+     * @param rank      順位
      */
-    public static class PlayerProgress {
-        /**
-         * プレイヤー
-         */
-        public final OfflinePlayer player;
-        /**
-         * 進捗のタイムスタンプ
-         */
-        public final Instant timestamp;
-        /**
-         * 順位
-         */
-        public final int rank;
-
-        public PlayerProgress(OfflinePlayer player, Instant timestamp, int rank) {
-            this.player = player;
-            this.timestamp = timestamp;
-            this.rank = rank;
-        }
+    public record PlayerProgress(OfflinePlayer player, Instant timestamp, int rank) {
     }
 }
