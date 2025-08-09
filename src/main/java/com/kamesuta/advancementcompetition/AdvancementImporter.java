@@ -120,7 +120,7 @@ public class AdvancementImporter {
         try (FileReader reader = new FileReader(jsonFile)) {
             AdvancementData advancementData = gson.fromJson(reader, AdvancementData.class);
             
-            if (advancementData == null || advancementData.getAdvancements() == null) {
+            if (advancementData == null || advancementData.isEmpty()) {
                 logger.log(Level.WARNING, "JSONファイルが無効または空です: " + jsonFile.getName());
                 skippedFiles++;
                 return;
@@ -130,7 +130,7 @@ public class AdvancementImporter {
             
             // 完了した実績のみを処理
             Map<String, AdvancementData.AdvancementProgress> completedAdvancements = 
-                advancementData.getCompletedAdvancements();
+                advancementData.getCompletedAdvancements(gson);
             
             for (Map.Entry<String, AdvancementData.AdvancementProgress> entry : completedAdvancements.entrySet()) {
                 String advancementKey = entry.getKey();

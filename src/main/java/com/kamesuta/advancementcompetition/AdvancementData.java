@@ -1,13 +1,26 @@
 package com.kamesuta.advancementcompetition;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
  * プレイヤーの実績データを表すクラス
  * JSONファイルから直接デシリアライズするために使用
+ * 
+ * JSON構造: 
+ * {
+ *   "minecraft:story/mine_stone": {
+ *     "criteria": {
+ *       "get_stone": "2025-08-08 17:37:05 +0900"
+ *     },
+ *     "done": true
+ *   },
+ *   "DataVersion": 123
+ * }
  */
-public class AdvancementData {
+public class AdvancementData extends HashMap<String, Object> {
     
     /**
      * 単一の実績の進捗情報
@@ -59,60 +72,55 @@ public class AdvancementData {
     }
     
     /**
-     * データバージョン（通常は無視）
+     * DataVersionを取得
+     * @return データバージョン、存在しない場合はnull
      */
-    @SerializedName("DataVersion")
-    private Integer dataVersion;
-    
-    /**
-     * 各実績の進捗情報
-     * キー: 実績キー（例: "minecraft:story/mine_stone"）
-     * 値: 実績の進捗情報
-     */
-    private Map<String, AdvancementProgress> advancements;
-    
     public Integer getDataVersion() {
-        return dataVersion;
-    }
-    
-    public void setDataVersion(Integer dataVersion) {
-        this.dataVersion = dataVersion;
-    }
-    
-    public Map<String, AdvancementProgress> getAdvancements() {
-        return advancements;
-    }
-    
-    public void setAdvancements(Map<String, AdvancementProgress> advancements) {
-        this.advancements = advancements;
+        Object dataVersion = get("DataVersion");
+        if (dataVersion instanceof Number) {
+            return ((Number) dataVersion).intValue();
+        }
+        return null;
     }
     
     /**
      * 完了した実績のみを取得
+     * @param gson Gsonインスタンス（AdvancementProgressへの変換用）
      * @return 完了した実績のMap
      */
-    public Map<String, AdvancementProgress> getCompletedAdvancements() {
-        if (advancements == null) {
-            return Map.of();
+    public Map<String, AdvancementProgress> getCompletedAdvancements(Gson gson) {
+        Map<String, AdvancementProgress> completedAdvancements = new HashMap<>();
+        
+        for (Map.Entry<String, Object> entry : this.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            
+            // DataVersionやその他のメタデータは除外
+            if (key.equals("DataVersion")) {
+                continue;
+            }
+            
+            // レシピ実績は除外
+            if (key.startsWith("minecraft:recipes/")) {
+                continue;
+            }
+            
+            // ObjectをAdvancementProgressに変換
+            try {
+                // GsonでObjectからAdvancementProgressに変換
+                String json = gson.toJson(value);
+                AdvancementProgress progress = gson.fromJson(json, AdvancementProgress.class);
+                
+                // 完了していない実績は除外
+                if (progress != null && progress.isDone()) {
+                    completedAdvancements.put(key, progress);
+                }
+            } catch (Exception e) {
+                // 変換に失敗した場合は無視
+                continue;
+            }
         }
         
-        return advancements.entrySet().stream()
-                .filter(entry -> {
-                    // DataVersionやその他のメタデータは除外
-                    if (entry.getKey().equals("DataVersion")) {
-                        return false;
-                    }
-                    // レシピ実績は除外
-                    if (entry.getKey().startsWith("minecraft:recipes/")) {
-                        return false;
-                    }
-                    // 完了していない実績は除外
-                    AdvancementProgress progress = entry.getValue();
-                    return progress != null && progress.isDone();
-                })
-                .collect(java.util.stream.Collectors.toMap(
-                    Map.Entry::getKey,
-                    Map.Entry::getValue
-                ));
+        return completedAdvancements;
     }
 }
