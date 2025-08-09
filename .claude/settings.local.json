@@ -13,7 +13,8 @@
       "mcp__ide__getDiagnostics",
       "mcp__serena__read_memory",
       "mcp__serena__replace_regex",
-      "Bash(mvn clean:*)"
+      "Bash(mvn clean:*)",
+      "mcp__serena__replace_symbol_body"
     ],
     "deny": []
   },

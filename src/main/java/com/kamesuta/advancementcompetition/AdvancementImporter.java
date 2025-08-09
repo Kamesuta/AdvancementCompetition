@@ -118,70 +118,50 @@ public class AdvancementImporter {
         
         // JSONファイルを読み込み
         try (FileReader reader = new FileReader(jsonFile)) {
-            JsonObject rootObj = gson.fromJson(reader, JsonObject.class);
+            AdvancementData advancementData = gson.fromJson(reader, AdvancementData.class);
+            
+            if (advancementData == null || advancementData.getAdvancements() == null) {
+                logger.log(Level.WARNING, "JSONファイルが無効または空です: " + jsonFile.getName());
+                skippedFiles++;
+                return;
+            }
             
             int playerAdvancementCount = 0;
             
-            // 各実績を処理
-            for (Map.Entry<String, JsonElement> entry : rootObj.entrySet()) {
+            // 完了した実績のみを処理
+            Map<String, AdvancementData.AdvancementProgress> completedAdvancements = 
+                advancementData.getCompletedAdvancements();
+            
+            for (Map.Entry<String, AdvancementData.AdvancementProgress> entry : completedAdvancements.entrySet()) {
                 String advancementKey = entry.getKey();
+                AdvancementData.AdvancementProgress progress = entry.getValue();
                 
-                // DataVersionやその他のメタデータは無視
-                if (advancementKey.equals("DataVersion")) {
+                // 最新の達成日時を取得
+                String latestTimeString = progress.getLatestCriteriaTime();
+                if (latestTimeString == null) {
+                    logger.log(Level.WARNING, "実績の達成日時が見つかりません: " + advancementKey + " (プレイヤー: " + playerName + ")");
                     continue;
                 }
                 
-                // レシピ実績は除外
-                if (advancementKey.startsWith("minecraft:recipes/")) {
+                // 日時文字列をTimestampに変換
+                Timestamp latestTimestamp;
+                try {
+                    Date date = dateFormat.parse(latestTimeString);
+                    latestTimestamp = new Timestamp(date.getTime());
+                } catch (ParseException e) {
+                    logger.log(Level.WARNING, "日時の解析に失敗: " + latestTimeString + " (実績: " + advancementKey + ")", e);
                     continue;
-                }
-                
-                JsonElement value = entry.getValue();
-                if (!value.isJsonObject()) {
-                    continue;
-                }
-                
-                JsonObject advObj = value.getAsJsonObject();
-                
-                // done: trueの実績のみ処理
-                if (!advObj.has("done") || !advObj.get("done").getAsBoolean()) {
-                    continue;
-                }
-                
-                // criteriaから最も遅い達成日時を取得
-                Timestamp latestTimestamp = null;
-                if (advObj.has("criteria") && advObj.get("criteria").isJsonObject()) {
-                    JsonObject criteria = advObj.getAsJsonObject("criteria");
-                    
-                    for (Map.Entry<String, JsonElement> criteriaEntry : criteria.entrySet()) {
-                        JsonElement criteriaValue = criteriaEntry.getValue();
-                        if (criteriaValue.isJsonPrimitive()) {
-                            String dateString = criteriaValue.getAsString();
-                            try {
-                                Date date = dateFormat.parse(dateString);
-                                Timestamp timestamp = new Timestamp(date.getTime());
-                                
-                                if (latestTimestamp == null || timestamp.after(latestTimestamp)) {
-                                    latestTimestamp = timestamp;
-                                }
-                            } catch (ParseException e) {
-                                logger.log(Level.WARNING, "日時の解析に失敗: " + dateString + " (実績: " + advancementKey + ")");
-                            }
-                        }
-                    }
                 }
                 
                 // データベースに記録
-                if (latestTimestamp != null) {
-                    try {
-                        rankingManager.recordAdvancementProgressData(playerUuid, playerName, advancementKey, latestTimestamp);
-                        
-                        playerAdvancementCount++;
-                        importedAdvancements++;
-                    } catch (Exception e) {
-                        logger.log(Level.SEVERE, "実績の記録に失敗: " + advancementKey + " (プレイヤー: " + playerName + ")", e);
-                        errors++;
-                    }
+                try {
+                    rankingManager.recordAdvancementProgressData(playerUuid, playerName, advancementKey, latestTimestamp);
+                    
+                    playerAdvancementCount++;
+                    importedAdvancements++;
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "実績の記録に失敗: " + advancementKey + " (プレイヤー: " + playerName + ")", e);
+                    errors++;
                 }
             }
             
