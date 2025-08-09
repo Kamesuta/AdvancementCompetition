@@ -10,12 +10,15 @@
       "mcp__serena__search_for_pattern",
       "mcp__serena__find_file",
       "mcp__serena__write_memory",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "mcp__serena__read_memory",
+      "mcp__serena__replace_regex",
+      "Bash(mvn clean:*)"
     ],
     "deny": []
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "serena"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

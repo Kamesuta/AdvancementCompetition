@@ -155,6 +155,32 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
             viewer.seePlayerAdvancements(player, player);
         }
 
+        // 管理者コマンド
+        if (command.getName().equals("adv_admin")) {
+            // 権限チェック
+            if (!sender.hasPermission("advancementcompetition.admin")) {
+                sender.sendMessage("§c権限がありません。");
+                return true;
+            }
+            
+            // サブコマンドのチェック
+            if (args.length == 0) {
+                sender.sendMessage("§c使用法: /adv_admin import_json_to_db");
+                return true;
+            }
+            
+            // import_json_to_db サブコマンド
+            if (args[0].equals("import_json_to_db")) {
+                AdvancementImporter importer = new AdvancementImporter(rankingManager);
+                importer.importFromJson(sender);
+                return true;
+            }
+            
+            sender.sendMessage("§c不明なサブコマンド: " + args[0]);
+            sender.sendMessage("§c使用法: /adv_admin import_json_to_db");
+            return true;
+        }
+
         return true;
     }
 

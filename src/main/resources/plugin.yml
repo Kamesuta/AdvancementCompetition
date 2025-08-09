@@ -6,7 +6,7 @@ depend:
   - ProtocolLib
 
 permissions:
-  advancementcompetition.command.admin:
+  advancementcompetition.admin:
     description: Allows the player to use the admin command
     default: op
 
@@ -15,6 +15,11 @@ permissions:
     default: true
 
 commands:
+  adv_admin:
+    description: Admin commands for advancement competition
+    usage: /adv_admin <subcommand>
+    permission: advancementcompetition.admin
+
   adv:
     description: Show player's advancements
     usage: /adv <player>

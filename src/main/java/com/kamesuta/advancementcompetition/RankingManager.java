@@ -124,7 +124,7 @@ public class RankingManager implements AutoCloseable, Listener {
         Player player = event.getPlayer();
 
         // 進捗を記録
-        recordAdvancementProgressData(player.getUniqueId(), player.getName(), key);
+        recordAdvancementProgressData(player.getUniqueId(), player.getName(), key, null);
     }
 
     /**
@@ -134,7 +134,7 @@ public class RankingManager implements AutoCloseable, Listener {
      * @param uuid プレイヤーのUUID
      * @param key  進捗のキー
      */
-    private void recordAdvancementProgressData(UUID uuid, String name, String key) {
+    public void recordAdvancementProgressData(UUID uuid, String name, String key, Timestamp timestamp) {
         // SQLに書き込み
         try {
             // プレイヤー情報の挿入または更新
@@ -147,11 +147,16 @@ public class RankingManager implements AutoCloseable, Listener {
             }
 
             // 進捗の追加
-            String sqlProgress = "INSERT IGNORE INTO progress (player_uuid, advancement_key, timestamp) VALUES (?, ?, NOW());";
+            String sqlProgress = timestamp == null 
+                ? "INSERT IGNORE INTO progress (player_uuid, advancement_key, timestamp) VALUES (?, ?, NOW());"
+                : "INSERT IGNORE INTO progress (player_uuid, advancement_key, timestamp) VALUES (?, ?, ?);";
             try (PreparedStatement pstmt = conn.prepareStatement(sqlProgress)) {
                 // SQLを実行
                 pstmt.setBytes(1, uuidToBytes(uuid));
                 pstmt.setString(2, key);
+                if (timestamp != null) {
+                    pstmt.setTimestamp(3, timestamp);
+                }
                 pstmt.executeUpdate();
             }
         } catch (SQLException e) {
