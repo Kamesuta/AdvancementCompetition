@@ -58,18 +58,6 @@ public class RankingManager implements AutoCloseable, Listener {
                             "UNIQUE (player_uuid, advancement_key)" +
                             ");"
             );
-
-            // ランキングデータベース
-            stmt.execute(
-                    "CREATE TABLE IF NOT EXISTS ranking (" +
-                            "id INT AUTO_INCREMENT PRIMARY KEY," +
-                            "player_uuid BINARY(16) NOT NULL," +
-                            "advancement_key VARCHAR(100) NOT NULL," +
-                            "score INT NOT NULL," +
-                            "FOREIGN KEY (player_uuid) REFERENCES player(uuid)," +
-                            "UNIQUE (player_uuid, advancement_key)" +
-                            ");"
-            );
         }
     }
 
