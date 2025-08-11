@@ -39,23 +39,35 @@ public class RankingManager implements AutoCloseable, Listener {
 
         // テーブルを作成する
         try (Statement stmt = conn.createStatement()) {
-            // プレイヤーデータベース
+            // playerテーブル
             stmt.execute(
                     "CREATE TABLE IF NOT EXISTS player (" +
-                            "uuid BINARY(16) NOT NULL PRIMARY KEY," +
-                            "name VARCHAR(20) NOT NULL" +
+                            "id INT AUTO_INCREMENT PRIMARY KEY," +
+                            "uuid BINARY(16) UNIQUE NOT NULL," +
+                            "name VARCHAR(16) NOT NULL," +
+                            "INDEX idx_uuid (uuid)" +
                             ");"
             );
 
-            // 進捗データベース
+            // advancementテーブル
             stmt.execute(
-                    "CREATE TABLE IF NOT EXISTS progress (" +
+                    "CREATE TABLE IF NOT EXISTS advancement (" +
                             "id INT AUTO_INCREMENT PRIMARY KEY," +
-                            "player_uuid BINARY(16) NOT NULL," +
-                            "advancement_key VARCHAR(100) NOT NULL," +
+                            "advancement_key VARCHAR(255) UNIQUE NOT NULL" +
+                            ");"
+            );
+
+            // player_advancementテーブル
+            stmt.execute(
+                    "CREATE TABLE IF NOT EXISTS player_advancement (" +
+                            "player_id INT NOT NULL," +
+                            "advancement_id INT NOT NULL," +
                             "timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                            "FOREIGN KEY (player_uuid) REFERENCES player(uuid)," +
-                            "UNIQUE (player_uuid, advancement_key)" +
+                            "PRIMARY KEY (player_id, advancement_id)," +
+                            "FOREIGN KEY (player_id) REFERENCES player(id)," +
+                            "FOREIGN KEY (advancement_id) REFERENCES advancement(id)," +
+                            "INDEX idx_advancement_id (advancement_id)," +
+                            "INDEX idx_timestamp (timestamp)" +
                             ");"
             );
         }
@@ -97,6 +109,83 @@ public class RankingManager implements AutoCloseable, Listener {
     }
 
     /**
+     * プレイヤーIDを取得または作成する
+     * @param uuid プレイヤーのUUID
+     * @param name プレイヤー名
+     * @return プレイヤーID
+     */
+    private int getOrCreatePlayerId(UUID uuid, String name) throws SQLException {
+        byte[] uuidBytes = AdvancementUtil.uuidToBytes(uuid);
+        
+        // まず既存のプレイヤーIDを取得
+        String selectSql = "SELECT id FROM player WHERE uuid = ?";
+        try (PreparedStatement selectStmt = conn.prepareStatement(selectSql)) {
+            selectStmt.setBytes(1, uuidBytes);
+            try (ResultSet rs = selectStmt.executeQuery()) {
+                if (rs.next()) {
+                    // 既存のプレイヤーが見つかった場合、名前を更新
+                    String updateSql = "UPDATE player SET name = ? WHERE id = ?";
+                    try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                        updateStmt.setString(1, name);
+                        updateStmt.setInt(2, rs.getInt("id"));
+                        updateStmt.executeUpdate();
+                    }
+                    return rs.getInt("id");
+                }
+            }
+        }
+        
+        // 新規プレイヤーを作成
+        String insertSql = "INSERT INTO player (uuid, name) VALUES (?, ?)";
+        try (PreparedStatement insertStmt = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
+            insertStmt.setBytes(1, uuidBytes);
+            insertStmt.setString(2, name);
+            insertStmt.executeUpdate();
+            
+            try (ResultSet rs = insertStmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        
+        throw new SQLException("Failed to create player record");
+    }
+
+    /**
+     * 実績IDを取得または作成する
+     * @param advancementKey 実績のキー
+     * @return 実績ID
+     */
+    private int getOrCreateAdvancementId(String advancementKey) throws SQLException {
+        // まず既存の実績IDを取得
+        String selectSql = "SELECT id FROM advancement WHERE advancement_key = ?";
+        try (PreparedStatement selectStmt = conn.prepareStatement(selectSql)) {
+            selectStmt.setString(1, advancementKey);
+            try (ResultSet rs = selectStmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
+            }
+        }
+        
+        // 新規実績を作成
+        String insertSql = "INSERT INTO advancement (advancement_key) VALUES (?)";
+        try (PreparedStatement insertStmt = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
+            insertStmt.setString(1, advancementKey);
+            insertStmt.executeUpdate();
+            
+            try (ResultSet rs = insertStmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        
+        throw new SQLException("Failed to create advancement record");
+    }
+
+    /**
      * プレイヤーの進捗を更新する
      *
      * @param event 進捗イベント
@@ -125,23 +214,19 @@ public class RankingManager implements AutoCloseable, Listener {
     public void recordAdvancementProgressData(UUID uuid, String name, String key, Timestamp timestamp) {
         // SQLに書き込み
         try {
-            // プレイヤー情報の挿入または更新
-            String sqlPlayer = "INSERT IGNORE INTO player (uuid, name) VALUES (?, ?);";
-            try (PreparedStatement pstmt = conn.prepareStatement(sqlPlayer)) {
-                // SQLを実行
-                pstmt.setBytes(1, uuidToBytes(uuid));
-                pstmt.setString(2, name);
-                pstmt.executeUpdate();
-            }
-
-            // 進捗の追加
-            String sqlProgress = timestamp == null 
-                ? "INSERT IGNORE INTO progress (player_uuid, advancement_key, timestamp) VALUES (?, ?, NOW());"
-                : "INSERT IGNORE INTO progress (player_uuid, advancement_key, timestamp) VALUES (?, ?, ?);";
-            try (PreparedStatement pstmt = conn.prepareStatement(sqlProgress)) {
-                // SQLを実行
-                pstmt.setBytes(1, uuidToBytes(uuid));
-                pstmt.setString(2, key);
+            // プレイヤーIDを取得または作成
+            int playerId = getOrCreatePlayerId(uuid, name);
+            
+            // 実績IDを取得または作成
+            int advancementId = getOrCreateAdvancementId(key);
+            
+            // player_advancementテーブルに記録
+            String sql = timestamp == null 
+                ? "INSERT IGNORE INTO player_advancement (player_id, advancement_id, timestamp) VALUES (?, ?, NOW());"
+                : "INSERT IGNORE INTO player_advancement (player_id, advancement_id, timestamp) VALUES (?, ?, ?);";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, playerId);
+                pstmt.setInt(2, advancementId);
                 if (timestamp != null) {
                     pstmt.setTimestamp(3, timestamp);
                 }
@@ -187,7 +272,9 @@ public class RankingManager implements AutoCloseable, Listener {
 
             // 達成したプレイヤーの数を取得
             try (PreparedStatement pstmt = conn.prepareStatement(
-                    "SELECT COUNT(*) FROM progress WHERE advancement_key = ?;"
+                    "SELECT COUNT(*) FROM player_advancement pa " +
+                    "JOIN advancement a ON pa.advancement_id = a.id " +
+                    "WHERE a.advancement_key = ?;"
             )) {
                 // SQLを実行
                 pstmt.setString(1, key);
@@ -201,8 +288,10 @@ public class RankingManager implements AutoCloseable, Listener {
 
             // 現在のプレイヤーの進捗を取得
             try (PreparedStatement pstmt = conn.prepareStatement(
-                    "SELECT player_uuid, timestamp, RANK() OVER(ORDER BY timestamp DESC) FROM progress " +
-                            "WHERE player_uuid = ? AND advancement_key = ? " +
+                    "SELECT p.uuid, pa.timestamp, RANK() OVER(ORDER BY pa.timestamp DESC) FROM player_advancement pa " +
+                            "JOIN player p ON pa.player_id = p.id " +
+                            "JOIN advancement a ON pa.advancement_id = a.id " +
+                            "WHERE p.uuid = ? AND a.advancement_key = ? " +
                             "LIMIT 1;"
             )) {
                 // SQLを実行
@@ -222,9 +311,11 @@ public class RankingManager implements AutoCloseable, Listener {
             // 上位のプレイヤーの進捗を取得
             if (limitTop > 0) {
                 try (PreparedStatement pstmt = conn.prepareStatement(
-                        "SELECT player_uuid, timestamp, RANK() OVER(ORDER BY timestamp ASC) FROM progress " +
-                                "WHERE advancement_key = ? " +
-                                "ORDER BY timestamp ASC " +
+                        "SELECT p.uuid, pa.timestamp, RANK() OVER(ORDER BY pa.timestamp ASC) FROM player_advancement pa " +
+                                "JOIN player p ON pa.player_id = p.id " +
+                                "JOIN advancement a ON pa.advancement_id = a.id " +
+                                "WHERE a.advancement_key = ? " +
+                                "ORDER BY pa.timestamp ASC " +
                                 "LIMIT ?;"
                 )) {
                     // SQLを実行
@@ -246,9 +337,11 @@ public class RankingManager implements AutoCloseable, Listener {
             if (limitBottom > 0) {
                 try (PreparedStatement pstmt = conn.prepareStatement(
                         "SELECT * FROM (" +
-                                "SELECT player_uuid, timestamp, RANK() OVER(ORDER BY timestamp ASC) FROM progress " +
-                                "WHERE advancement_key = ? " +
-                                "ORDER BY timestamp DESC " +
+                                "SELECT p.uuid, pa.timestamp, RANK() OVER(ORDER BY pa.timestamp ASC) FROM player_advancement pa " +
+                                "JOIN player p ON pa.player_id = p.id " +
+                                "JOIN advancement a ON pa.advancement_id = a.id " +
+                                "WHERE a.advancement_key = ? " +
+                                "ORDER BY pa.timestamp DESC " +
                                 "LIMIT ?" +
                                 ") AS A ORDER BY timestamp ASC;"
                 )) {
