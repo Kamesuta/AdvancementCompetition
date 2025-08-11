@@ -73,6 +73,15 @@ public class AdvancementRanking {
                             description.append("\n\n")
                                     .append(Component.literal("トップ3").withStyle(ChatFormatting.YELLOW));
                             ranking.appendRanking(description, ranking.top());
+                            
+                            // 詳細ランキングコマンドのリンクを追加
+                            String advancementKey = holder.id().toString();
+                            int advancementId = app.rankingManager.getAdvancementIdByKey(advancementKey);
+                            if (advancementId != -1) {
+                                description.append("\n")
+                                        .append(Component.literal("/adv_rank " + advancementId).withStyle(ChatFormatting.BLUE))
+                                        .append(Component.literal(" で全てのランキングを見る").withStyle(ChatFormatting.GRAY));
+                            }
                         }
                         // 直近3人の進捗を追加 (6人以上の場合)
                         if (!ranking.bottom().isEmpty() && ranking.done() >= 6) {
