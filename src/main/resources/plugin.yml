@@ -11,7 +11,11 @@ permissions:
     default: op
 
   advancementcompetition.command.adv:
-    description: Allows the player to see player's advancements
+    description: Allows the player to see other player's advancements
+    default: true
+
+  advancementcompetition.command.adv_id:
+    description: Allows the player to see the IDs of advancements
     default: true
 
 commands:
@@ -28,4 +32,4 @@ commands:
   adv_id:
     description: Show ID of the advancements
     usage: /adv_id
-    permission: advancementcompetition.command.adv
+    permission: advancementcompetition.command.adv_id
