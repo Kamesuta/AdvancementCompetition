@@ -159,8 +159,11 @@ public class ChatUtils {
     /**
      * ランキングヘッダーを表示
      */
-    public static void displayRankingHeader(CommandSender sender, String displayName) {
-        sender.sendMessage("§e===== 実績ランキング: " + displayName + " =====");
+    public static void displayRankingHeader(CommandSender sender, Component displayName) {
+        Component header = Component.text("===== 実績ランキング: ", NamedTextColor.YELLOW)
+                .append(displayName)
+                .append(Component.text(" =====", NamedTextColor.YELLOW));
+        sender.sendMessage(header);
     }
     
     /**
@@ -178,53 +181,30 @@ public class ChatUtils {
     /**
      * 実績キーから表示名を取得（多言語対応）
      * @param advancementKey 実績キー
-     * @param player プレイヤー（言語設定用、nullの場合は英語）
-     * @return 表示名
+     * @return 表示名のComponent
      */
-    public static String getAdvancementDisplayName(String advancementKey, Player player) {
-        if (advancementKey == null) return "不明な実績";
+    public static Component getAdvancementDisplayName(String advancementKey) {
+        if (advancementKey == null) return Component.text("不明な実績");
         
-        try {
-            // NamespacedKeyを作成
-            NamespacedKey key = NamespacedKey.fromString(advancementKey);
-            if (key == null) {
-                return getFallbackDisplayName(advancementKey);
-            }
-            
-            // 進捗を取得
-            Advancement advancement = Bukkit.getAdvancement(key);
-            if (advancement == null) {
-                return getFallbackDisplayName(advancementKey);
-            }
-            
-            // 進捗の表示名を取得
-            if (advancement.getDisplay() != null) {
-                // 標準のBukkit APIを使用してタイトルを取得
-                // TODO: 将来的にTranslationComponentが利用可能になったら実装を改善
-                // 現在は英語タイトルのみ取得可能
-                try {
-                    // リフレクションを使用してタイトルを取得する方法もあるが、
-                    // 互換性を考慮してフォールバックを使用
-                } catch (Exception ignored) {
-                    // リフレクションエラーは無視
-                }
-            }
-            
-            return getFallbackDisplayName(advancementKey);
-            
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "実績名の取得に失敗しました: " + advancementKey, e);
-            return getFallbackDisplayName(advancementKey);
+        // NamespacedKeyを作成
+        NamespacedKey key = NamespacedKey.fromString(advancementKey);
+        if (key == null) {
+            return Component.text(getFallbackDisplayName(advancementKey));
         }
-    }
-    
-    /**
-     * 実績キーから表示名を取得（プレイヤー情報なし）
-     * @param advancementKey 実績キー
-     * @return 表示名
-     */
-    public static String getAdvancementDisplayName(String advancementKey) {
-        return getAdvancementDisplayName(advancementKey, null);
+        
+        // 進捗を取得
+        Advancement advancement = Bukkit.getAdvancement(key);
+        if (advancement == null) {
+            return Component.text(getFallbackDisplayName(advancementKey));
+        }
+        
+        // 進捗の表示名を取得
+        if (advancement.getDisplay() != null) {
+            // advancement.getDisplay().title()でKyori Componentを取得
+            return advancement.getDisplay().title();
+        }
+        
+        return Component.text(getFallbackDisplayName(advancementKey));
     }
     
     /**

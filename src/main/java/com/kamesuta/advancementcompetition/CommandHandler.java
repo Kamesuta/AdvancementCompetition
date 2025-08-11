@@ -1,5 +1,6 @@
 package com.kamesuta.advancementcompetition;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -74,10 +75,9 @@ public class CommandHandler {
             return true;
         }
         
-        // 実績名表示（プレイヤーの言語設定を考慮）
+        // 実績名表示（多言語対応）
         String advancementKey = result.advancementKey();
-        Player player = sender instanceof Player ? (Player) sender : null;
-        String displayName = ChatUtils.getAdvancementDisplayName(advancementKey, player);
+        Component displayName = ChatUtils.getAdvancementDisplayName(advancementKey);
         
         // ヘッダー表示
         ChatUtils.displayRankingHeader(sender, displayName);
