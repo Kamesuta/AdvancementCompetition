@@ -1,4 +1,4 @@
-package com.kamesuta.advrank;
+package com.kamesuta.advrank.util;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

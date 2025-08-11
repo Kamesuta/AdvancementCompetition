@@ -1,4 +1,4 @@
-package com.kamesuta.advrank;
+package com.kamesuta.advrank.display;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
 
 import java.util.logging.Level;
 
-import static com.kamesuta.advrank.AdvancementRankingPlugin.logger;
+import static com.kamesuta.advrank.AdvRankingPlugin.logger;
 
 /**
  * チャット関連のユーティリティクラス

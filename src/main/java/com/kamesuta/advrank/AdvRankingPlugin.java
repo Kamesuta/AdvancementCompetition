@@ -8,6 +8,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import com.kamesuta.advrank.command.CommandHandler;
+import com.kamesuta.advrank.data.PlayerDataManager;
+import com.kamesuta.advrank.database.RankingManager;
+import com.kamesuta.advrank.display.AdvancementRankingDisplay;
+import com.kamesuta.advrank.display.AdvancementViewer;
 
 
 import java.util.List;
@@ -17,7 +22,7 @@ import java.util.logging.Logger;
 /**
  * プラグイン
  */
-public final class AdvancementRankingPlugin extends JavaPlugin implements Listener {
+public final class AdvRankingPlugin extends JavaPlugin implements Listener {
     /**
      * ロガー
      */
@@ -25,7 +30,7 @@ public final class AdvancementRankingPlugin extends JavaPlugin implements Listen
     /**
      * プラグイン
      */
-    public static AdvancementRankingPlugin app;
+    public static AdvRankingPlugin app;
 
     /**
      * ProtocolLibのプロトコルマネージャ
@@ -81,9 +86,7 @@ public final class AdvancementRankingPlugin extends JavaPlugin implements Listen
         getServer().getPluginManager().registerEvents(rankingManager, this);
 
         // 定期的にSQLのPingを送信
-        getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
-            rankingManager.pingDatabase();
-        }, 0, 300 * 20);
+        getServer().getScheduler().runTaskTimerAsynchronously(this, () -> rankingManager.pingDatabase(), 0, 300 * 20);
 
         // Viewer初期化
         viewer = new AdvancementViewer();
@@ -114,31 +117,27 @@ public final class AdvancementRankingPlugin extends JavaPlugin implements Listen
     // コマンドハンドラ
     public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String @NotNull [] args) {
         // ランキング表示
-        if (command.getName().equals("adv_rank")) {
-            return commandHandler.handleAdvRankCommand(sender, args);
-        }
-        
-        // 他人の進捗を見る
-        if (command.getName().equals("adv")) {
-            return commandHandler.handleAdvCommand(sender, args);
-        }
+        return switch (command.getName()) {
+            // ランキング表示
+            case "adv_rank" -> commandHandler.handleAdvRankCommand(sender, args);
 
-        // ID表示
-        if (command.getName().equals("adv_id")) {
-            return commandHandler.handleAdvIdCommand(sender, args);
-        }
+            // 他人の進捗を見る
+            case "adv" -> commandHandler.handleAdvCommand(sender, args);
 
-        // 管理者コマンド
-        if (command.getName().equals("adv_admin")) {
-            return commandHandler.handleAdvAdminCommand(sender, args);
-        }
+            // ID表示
+            case "adv_id" -> commandHandler.handleAdvIdCommand(sender, args);
 
-        return true;
+            // 管理者コマンド
+            case "adv_admin" -> commandHandler.handleAdvAdminCommand(sender, args);
+
+            // その他のコマンドは無視
+            default -> true;
+        };
     }
 
     // タブ補完
     @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, Command command, @NotNull String alias, String @NotNull [] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String @NotNull [] args) {
         return commandHandler.handleTabComplete(sender, command, args);
     }
 }

@@ -1,6 +1,6 @@
 name: AdvancementRanking
 version: '${project.version}'
-main: com.kamesuta.advrank.AdvancementRankingPlugin
+main: com.kamesuta.advrank.AdvRankingPlugin
 api-version: '1.20'
 depend:
   - ProtocolLib

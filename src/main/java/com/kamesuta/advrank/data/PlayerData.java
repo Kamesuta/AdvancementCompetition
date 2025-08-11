@@ -1,4 +1,4 @@
-package com.kamesuta.advrank;
+package com.kamesuta.advrank.data;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;

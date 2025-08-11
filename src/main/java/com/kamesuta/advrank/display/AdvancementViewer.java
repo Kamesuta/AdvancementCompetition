@@ -1,4 +1,6 @@
-package com.kamesuta.advrank;
+package com.kamesuta.advrank.display;
+
+import com.kamesuta.advrank.data.PlayerData;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketAdapter;
@@ -20,7 +22,7 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 
-import static com.kamesuta.advrank.AdvancementRankingPlugin.app;
+import static com.kamesuta.advrank.AdvRankingPlugin.app;
 
 /**
  * 他人の進捗を見る

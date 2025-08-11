@@ -1,4 +1,4 @@
-package com.kamesuta.advrank;
+package com.kamesuta.advrank.data;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
@@ -69,18 +69,6 @@ public class AdvancementData extends HashMap<String, Object> {
                     .max(String::compareTo)
                     .orElse(null);
         }
-    }
-    
-    /**
-     * DataVersionを取得
-     * @return データバージョン、存在しない場合はnull
-     */
-    public Integer getDataVersion() {
-        Object dataVersion = get("DataVersion");
-        if (dataVersion instanceof Number) {
-            return ((Number) dataVersion).intValue();
-        }
-        return null;
     }
     
     /**
