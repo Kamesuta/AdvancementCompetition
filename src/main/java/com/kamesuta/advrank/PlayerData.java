@@ -1,4 +1,4 @@
-package com.kamesuta.advancementcompetition;
+package com.kamesuta.advrank;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;

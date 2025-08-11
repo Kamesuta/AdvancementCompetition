@@ -1,4 +1,4 @@
-package com.kamesuta.advancementcompetition;
+package com.kamesuta.advrank;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

@@ -1,4 +1,4 @@
-package com.kamesuta.advancementcompetition;
+package com.kamesuta.advrank;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketAdapter;
@@ -19,12 +19,12 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
 
-import static com.kamesuta.advancementcompetition.AdvancementCompetition.app;
+import static com.kamesuta.advrank.AdvancementRankingPlugin.app;
 
 /**
  * ランキング表示
  */
-public class AdvancementRanking {
+public class AdvancementRankingDisplay {
     /**
      * ランキング表示パケットアダプターを登録する
      */

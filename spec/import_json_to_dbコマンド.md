@@ -101,7 +101,7 @@ MinecraftサーバーのadvancementsディレクトリにあるJSON形式の実�
 
 ### 6. コマンド実装場所
 
-既存の`AdvancementCompetition.java`の`onCommand`メソッドに追加実装:
+既存の`AdvancementRanking.java`の`onCommand`メソッドに追加実装:
 - コマンド名: `adv_admin`
 - 引数チェック: `args[0].equals("import_json_to_db")`
 
@@ -122,7 +122,7 @@ MinecraftサーバーのadvancementsディレクトリにあるJSON形式の実�
 
 3. **plugin.ymlの更新**
    - `adv_admin`コマンドの追加
-   - 権限設定（`advancementcompetition.admin`）
+   - 権限設定（`advrank.admin`）
 
 ### 8. セキュリティ考慮事項
 

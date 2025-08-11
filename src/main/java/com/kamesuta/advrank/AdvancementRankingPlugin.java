@@ -1,4 +1,4 @@
-package com.kamesuta.advancementcompetition;
+package com.kamesuta.advrank;
 
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 /**
  * プラグイン
  */
-public final class AdvancementCompetition extends JavaPlugin implements Listener {
+public final class AdvancementRankingPlugin extends JavaPlugin implements Listener {
     /**
      * ロガー
      */
@@ -25,7 +25,7 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
     /**
      * プラグイン
      */
-    public static AdvancementCompetition app;
+    public static AdvancementRankingPlugin app;
 
     /**
      * ProtocolLibのプロトコルマネージャ
@@ -43,7 +43,7 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
     /**
      * ランキング表示
      */
-    public AdvancementRanking ranking;
+    public AdvancementRankingDisplay ranking;
     /**
      * ランキングマネージャー
      */
@@ -89,7 +89,7 @@ public final class AdvancementCompetition extends JavaPlugin implements Listener
         viewer = new AdvancementViewer();
         viewer.register();
         // Ranking初期化
-        ranking = new AdvancementRanking();
+        ranking = new AdvancementRankingDisplay();
         ranking.register();
         
         // コマンドハンドラ初期化

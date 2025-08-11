@@ -2,6 +2,6 @@
 mysql:
   username: "root"
   password: ""
-  databaseName: "advancement_competition"
+  databaseName: "advancement_ranking"
   host: "127.0.0.1"
   port: 3306

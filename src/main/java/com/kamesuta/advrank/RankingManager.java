@@ -1,4 +1,4 @@
-package com.kamesuta.advancementcompetition;
+package com.kamesuta.advrank;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -16,10 +16,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 
-import static com.kamesuta.advancementcompetition.AdvancementCompetition.app;
-import static com.kamesuta.advancementcompetition.AdvancementCompetition.logger;
-import static com.kamesuta.advancementcompetition.AdvancementUtil.bytesToUuid;
-import static com.kamesuta.advancementcompetition.AdvancementUtil.uuidToBytes;
+import static com.kamesuta.advrank.AdvancementRankingPlugin.app;
+import static com.kamesuta.advrank.AdvancementRankingPlugin.logger;
+import static com.kamesuta.advrank.AdvancementUtil.bytesToUuid;
+import static com.kamesuta.advrank.AdvancementUtil.uuidToBytes;
 
 /**
  * ランキング管理

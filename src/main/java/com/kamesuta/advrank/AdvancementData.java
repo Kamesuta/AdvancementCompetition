@@ -1,4 +1,4 @@
-package com.kamesuta.advancementcompetition;
+package com.kamesuta.advrank;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;

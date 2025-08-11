@@ -76,7 +76,7 @@
 
 #### 権限
 - デフォルト: 全プレイヤーが実行可能
-- 設定により制限可能: `advancementcompetition.command.adv_rank`
+- 設定により制限可能: `advrank.command.adv_rank`
 
 ## L キー実績画面の拡張仕様
 
@@ -120,7 +120,7 @@
    - getRankingByAdvancementId メソッドの追加 ✅
    - ページネーション機能の追加（新規）
 
-2. **AdvancementCompetition.java**
+2. **AdvancementRanking.java**
    - /adv_rank コマンドの追加 ✅
    - パラメータ検証処理 ✅
    - ページネーション対応（新規）
@@ -128,7 +128,7 @@
 ### Phase 3: 新機能追加
 1. **ページネーション機能**
    - RankingManager.java にページネーション対応メソッドの追加
-   - AdvancementCompetition.java でページ番号パラメータの処理
+   - AdvancementRanking.java でページ番号パラメータの処理
    - チャット要素によるページ移動UI実装
 
 2. **L キー画面統合**

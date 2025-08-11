@@ -1,4 +1,4 @@
-package com.kamesuta.advancementcompetition;
+package com.kamesuta.advrank;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -13,7 +13,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.kamesuta.advancementcompetition.AdvancementCompetition.app;
+import static com.kamesuta.advrank.AdvancementRankingPlugin.app;
 
 /**
  * コマンド処理クラス
@@ -175,7 +175,7 @@ public class CommandHandler {
      */
     public boolean handleAdvAdminCommand(CommandSender sender, String[] args) {
         // 権限チェック
-        if (!sender.hasPermission("advancementcompetition.admin")) {
+        if (!sender.hasPermission("advrank.admin")) {
             sender.sendMessage("§c権限がありません。");
             return true;
         }

@@ -1,44 +1,44 @@
-name: AdvancementCompetition
+name: AdvancementRanking
 version: '${project.version}'
-main: com.kamesuta.advancementcompetition.AdvancementCompetition
+main: com.kamesuta.advrank.AdvancementRankingPlugin
 api-version: '1.20'
 depend:
   - ProtocolLib
 
 permissions:
-  advancementcompetition.admin:
+  advrank.admin:
     description: Allows the player to use the admin command
     default: op
 
-  advancementcompetition.command.adv:
+  advrank.command.adv:
     description: Allows the player to see other player's advancements
     default: true
 
-  advancementcompetition.command.adv_id:
+  advrank.command.adv_id:
     description: Allows the player to see the IDs of advancements
     default: true
 
-  advancementcompetition.command.adv_rank:
+  advrank.command.adv_rank:
     description: Allows the player to see advancement rankings
     default: true
 
 commands:
   adv_admin:
-    description: Admin commands for advancement competition
+    description: Admin commands for advancement ranking plugin
     usage: /adv_admin <subcommand>
-    permission: advancementcompetition.admin
+    permission: advrank.admin
 
   adv:
     description: Show player's advancements
     usage: /adv <player>
-    permission: advancementcompetition.command.adv
+    permission: advrank.command.adv
 
   adv_id:
     description: Show ID of the advancements
     usage: /adv_id
-    permission: advancementcompetition.command.adv_id
+    permission: advrank.command.adv_id
 
   adv_rank:
     description: Show advancement rankings
     usage: /adv_rank <ID> [page]
-    permission: advancementcompetition.command.adv_rank
+    permission: advrank.command.adv_rank

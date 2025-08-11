@@ -1,4 +1,4 @@
-package com.kamesuta.advancementcompetition;
+package com.kamesuta.advrank;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -10,7 +10,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-import static com.kamesuta.advancementcompetition.AdvancementUtil.TIME_FORMATTER;
+import static com.kamesuta.advrank.AdvancementUtil.TIME_FORMATTER;
 
 /**
  * ランキングの進捗データ

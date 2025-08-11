@@ -1,4 +1,4 @@
-package com.kamesuta.advancementcompetition;
+package com.kamesuta.advrank;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -16,7 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Level;
 
-import static com.kamesuta.advancementcompetition.AdvancementCompetition.logger;
+import static com.kamesuta.advrank.AdvancementRankingPlugin.logger;
 
 /**
  * JSONファイルから実績データをインポートするクラス
@@ -44,7 +44,7 @@ public class AdvancementImporter {
      */
     public boolean importFromJson(CommandSender sender) {
         // 権限チェック
-        if (!sender.hasPermission("advancementcompetition.admin")) {
+        if (!sender.hasPermission("advrank.admin")) {
             sender.sendMessage("§c権限がありません。");
             return false;
         }
