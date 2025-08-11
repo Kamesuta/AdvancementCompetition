@@ -367,4 +367,198 @@ public class RankingManager implements AutoCloseable, Listener {
 
         return new RankingProgressData(total, done, progress, top, bottom);
     }
+    
+    /**
+     * 実績IDによるランキングデータを取得（ページネーション対応）
+     *
+     * @param advancementId 実績ID
+     * @param page ページ番号（1から開始）
+     * @param pageSize 1ページあたりの件数
+     * @return ランキング結果
+     */
+    public RankingResult getRankingByAdvancementIdWithPagination(int advancementId, int page, int pageSize) {
+        List<RankingEntry> ranking = new ArrayList<>();
+        String advancementKey = null;
+        int totalCount = 0;
+        
+        try {
+            // まず実績キーを取得
+            try (PreparedStatement pstmt = conn.prepareStatement(
+                    "SELECT advancement_key FROM advancement WHERE id = ?;"
+            )) {
+                pstmt.setInt(1, advancementId);
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    advancementKey = rs.getString("advancement_key");
+                }
+            }
+            
+            if (advancementKey == null) {
+                return new RankingResult(ranking, null, 0, page, pageSize);
+            }
+            
+            // 総件数を取得
+            try (PreparedStatement pstmt = conn.prepareStatement(
+                    "SELECT COUNT(*) FROM player_advancement pa WHERE pa.advancement_id = ?;"
+            )) {
+                pstmt.setInt(1, advancementId);
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    totalCount = rs.getInt(1);
+                }
+            }
+            
+            // ページネーション付きランキングデータを取得
+            int offset = (page - 1) * pageSize;
+            try (PreparedStatement pstmt = conn.prepareStatement(
+                    "SELECT p.name, pa.timestamp, " +
+                    "RANK() OVER (ORDER BY pa.timestamp ASC) as rank " +
+                    "FROM player_advancement pa " +
+                    "JOIN player p ON pa.player_id = p.id " +
+                    "WHERE pa.advancement_id = ? " +
+                    "ORDER BY pa.timestamp ASC " +
+                    "LIMIT ? OFFSET ?;"
+            )) {
+                pstmt.setInt(1, advancementId);
+                pstmt.setInt(2, pageSize);
+                pstmt.setInt(3, offset);
+                ResultSet rs = pstmt.executeQuery();
+                
+                while (rs.next()) {
+                    String playerName = rs.getString("name");
+                    Timestamp timestamp = rs.getTimestamp("timestamp");
+                    int rank = rs.getInt("rank");
+                    ranking.add(new RankingEntry(playerName, timestamp, rank, advancementKey));
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "ランキングデータの取得に失敗しました", e);
+        }
+        
+        return new RankingResult(ranking, advancementKey, totalCount, page, pageSize);
+    }
+    
+    /**
+     * プレイヤーの実績ランキングを取得
+     *
+     * @param advancementId 実績ID
+     * @param playerUuid プレイヤーのUUID
+     * @return プレイヤーのランキング情報（未達成の場合はnull）
+     */
+    public RankingEntry getPlayerRankingByAdvancementId(int advancementId, UUID playerUuid) {
+        try {
+            // 実績キーを取得
+            String advancementKey = null;
+            try (PreparedStatement pstmt = conn.prepareStatement(
+                    "SELECT advancement_key FROM advancement WHERE id = ?;"
+            )) {
+                pstmt.setInt(1, advancementId);
+                ResultSet rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    advancementKey = rs.getString("advancement_key");
+                }
+            }
+            
+            if (advancementKey == null) {
+                return null;
+            }
+            
+            // プレイヤーのランキングを取得
+            try (PreparedStatement pstmt = conn.prepareStatement(
+                    "SELECT p.name, pa.timestamp, " +
+                    "(SELECT COUNT(*) + 1 FROM player_advancement pa2 " +
+                    " JOIN player p2 ON pa2.player_id = p2.id " +
+                    " WHERE pa2.advancement_id = ? AND pa2.timestamp < pa.timestamp) as rank " +
+                    "FROM player_advancement pa " +
+                    "JOIN player p ON pa.player_id = p.id " +
+                    "WHERE pa.advancement_id = ? AND p.uuid = ?;"
+            )) {
+                pstmt.setInt(1, advancementId);
+                pstmt.setInt(2, advancementId);
+                pstmt.setBytes(3, AdvancementUtil.uuidToBytes(playerUuid));
+                ResultSet rs = pstmt.executeQuery();
+                
+                if (rs.next()) {
+                    String playerName = rs.getString("name");
+                    Timestamp timestamp = rs.getTimestamp("timestamp");
+                    int rank = rs.getInt("rank");
+                    return new RankingEntry(playerName, timestamp, rank, advancementKey);
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "プレイヤーランキングの取得に失敗しました", e);
+        }
+        
+        return null;
+    }
+
+    /**
+     * 実績キーから実績IDを取得
+     *
+     * @param advancementKey 実績キー
+     * @return 実績ID（見つからない場合は-1）
+     */
+    public int getAdvancementIdByKey(String advancementKey) {
+        try (PreparedStatement pstmt = conn.prepareStatement(
+                "SELECT id FROM advancement WHERE advancement_key = ?;"
+        )) {
+            pstmt.setString(1, advancementKey);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "実績IDの取得に失敗しました", e);
+        }
+        return -1;
+    }
+
+    /**
+     * 実績IDの存在確認
+     *
+     * @param advancementId 実績ID
+     * @return 存在する場合true
+     */
+    public boolean isAdvancementIdExists(int advancementId) {
+        try (PreparedStatement pstmt = conn.prepareStatement(
+                "SELECT COUNT(*) FROM advancement WHERE id = ?;"
+        )) {
+            pstmt.setInt(1, advancementId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "実績IDの存在確認に失敗しました", e);
+        }
+        return false;
+    }
+
+    /**
+     * ランキング結果のデータクラス（ページネーション対応）
+     */
+    public record RankingResult(
+            List<RankingEntry> entries,
+            String advancementKey,
+            int totalCount,
+            int currentPage,
+            int pageSize) {
+        public int getTotalPages() {
+            return (int) Math.ceil((double) totalCount / pageSize);
+        }
+
+        public boolean hasNextPage() {
+            return currentPage < getTotalPages();
+        }
+
+        public boolean hasPreviousPage() {
+            return currentPage > 1;
+        }
+    }
+
+    /**
+     * ランキングエントリーのデータクラス
+     */
+    public record RankingEntry(String playerName, Timestamp timestamp, int rank, String advancementKey) {
+    }
 }

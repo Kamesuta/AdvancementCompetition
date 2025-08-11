@@ -18,6 +18,10 @@ permissions:
     description: Allows the player to see the IDs of advancements
     default: true
 
+  advancementcompetition.command.adv_rank:
+    description: Allows the player to see advancement rankings
+    default: true
+
 commands:
   adv_admin:
     description: Admin commands for advancement competition
@@ -33,3 +37,8 @@ commands:
     description: Show ID of the advancements
     usage: /adv_id
     permission: advancementcompetition.command.adv_id
+
+  adv_rank:
+    description: Show advancement rankings
+    usage: /adv_rank <ID> [page]
+    permission: advancementcompetition.command.adv_rank
