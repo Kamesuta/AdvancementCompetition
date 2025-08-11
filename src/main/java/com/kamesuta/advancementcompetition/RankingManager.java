@@ -60,10 +60,11 @@ public class RankingManager implements AutoCloseable, Listener {
             // player_advancementテーブル
             stmt.execute(
                     "CREATE TABLE IF NOT EXISTS player_advancement (" +
+                            "id INT AUTO_INCREMENT PRIMARY KEY," +
                             "player_id INT NOT NULL," +
                             "advancement_id INT NOT NULL," +
                             "timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                            "PRIMARY KEY (player_id, advancement_id)," +
+                            "UNIQUE KEY unique_player_advancement (player_id, advancement_id)," +
                             "FOREIGN KEY (player_id) REFERENCES player(id)," +
                             "FOREIGN KEY (advancement_id) REFERENCES advancement(id)," +
                             "INDEX idx_advancement_id (advancement_id)," +
